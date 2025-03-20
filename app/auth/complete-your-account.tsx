@@ -13,6 +13,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import TextInput from "@/components/Forms/TextInput";
 import RadioButtonInput from "@/components/Forms/RadioButtonInput";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ipAddress } from "../ip";
 
 const CompleteYourAccountScreen = () => {
   const { user, isLoaded } = useUser();
@@ -31,8 +33,15 @@ const CompleteYourAccountScreen = () => {
   const onSubmit = async (data: any) => {
     const { full_name, username, gender } = data;
 
+    
     try {
       setIsLoading(true);
+
+      const emailApi = await AsyncStorage.getItem("email");
+      const emailClerk = user?.primaryEmailAddress?.emailAddress || "";
+      const email = emailApi || emailClerk;
+      console.log("email", email);
+
       await user?.update({
         unsafeMetadata: {
           full_name, 
@@ -41,6 +50,19 @@ const CompleteYourAccountScreen = () => {
           onboarding_completed: true,
         },
       });
+      await AsyncStorage.setItem(
+        "userData",
+        JSON.stringify({ full_name, username, gender })
+      );
+      
+      if(email){
+        await fetch(`${ipAddress}/update-infor`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, full_name, username, gender }),
+        });
+      }
+      
       await user?.reload();
 
       return router.push("/(tabs)");
@@ -48,7 +70,6 @@ const CompleteYourAccountScreen = () => {
       if (error.message === "That username is taken. Please try another.") {
         return setError("username", { message: "Username is already taken" });
       }
-
       return setError("full_name", { message: "An error occurred" });
     } finally {
       setIsLoading(false);
@@ -56,18 +77,17 @@ const CompleteYourAccountScreen = () => {
   };
 
   useEffect(() => {
-    if (!isLoaded) {
-      return;
-    }
+  if (!isLoaded || !user) return;
 
-    if (!user) {
-      return;
-    }
+  setValue("full_name", user.fullName || "");
+  setValue("username", user.username || "");
+  setValue("gender", String(user.unsafeMetadata?.gender) || "");
 
-    setValue("full_name", user?.fullName || "");
-    setValue("username", user?.username || "");
-    setValue("gender", String(user?.unsafeMetadata?.gender) || "");
-  }, [isLoaded, user]);
+  const userEmail = user.primaryEmailAddress?.emailAddress;
+  if (userEmail) {
+    AsyncStorage.setItem("email", userEmail);
+  }
+}, [isLoaded, user]);
 
   return (
     <View
