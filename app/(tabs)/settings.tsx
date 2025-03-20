@@ -41,13 +41,14 @@ const SettingsScreen = () => {
     }
   };
 
-  const handleEdit = async () => {
+  const handleEdit = () => {
     try {
-    
+      router.push("/page/changepass");
     } catch (error) {
       console.error("❌ Lỗi khi điều hướng đến màn hình chỉnh sửa:", error);
     }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -72,8 +73,9 @@ const SettingsScreen = () => {
             Gender: {String(user?.unsafeMetadata?.gender || storedUserData?.gender || "N/A")}
           </Text>
           <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-            <Text style={styles.buttonText}>Edit</Text>
+            <Text style={styles.buttonText}>Edit password</Text>
           </TouchableOpacity>
+         
         </View>
       </View>
     </View>
@@ -95,7 +97,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 20,
     backgroundColor: "#FFFFFF",
-    padding: 15,
+    padding: 25,
     borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -149,7 +151,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     marginTop: 15,
-    width: 120,
+    width: 150,
   },
   logoutButton: {
     position: "absolute",
@@ -161,7 +163,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 45, 
     height: 45,
-    right: 0,
+    right: 15,
   },
   buttonText: {
     color: "#FFFFFF",

@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View, Platform, StyleSheet, Image,
-  KeyboardAvoidingView
+  KeyboardAvoidingView, Keyboard
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ipAddress } from "../ip";
 import { useUser } from "@clerk/clerk-expo";
 import * as ImagePicker from "expo-image-picker";
+import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 
 interface Product {
   _id: string;
-  idsanpham: string;
+  tensp: string;
   loaisp: string;
   gia: number;
   hinhanh: string;
@@ -18,6 +19,7 @@ interface Product {
 
 const HomeScreen = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [userID, setUserID] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -28,8 +30,30 @@ const HomeScreen = () => {
   const [price, setPrice] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [tempSearchQuery, setTempSearchQuery] = useState(""); 
 
   const { user } = useUser();
+
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current); 
+    }
+
+    debounceTimeout.current = setTimeout(() => {
+      setSearchQuery(tempSearchQuery); 
+    }, 500); 
+
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, [tempSearchQuery]);
 
   useEffect(() => {
     const fetchUserID = async () => {
@@ -59,18 +83,71 @@ const HomeScreen = () => {
   }, [user]);
 
   useEffect(() => {
-    if (userID) fetchProducts(userID);
+    if (userID) {
+      fetchCategories(userID);
+      fetchProducts(userID, searchQuery, selectedCategory);
+    }
   }, [userID]);
 
-  const fetchProducts = async (userId: string) => {
+  useEffect(() => {
+    if (userID) {
+      fetchProducts(userID, searchQuery, selectedCategory);
+    }
+  }, [searchQuery, selectedCategory, userID]);
+
+  const fetchCategories = async (userId: string) => {
     try {
-      const response = await fetch(`${ipAddress}/products?user_id=${userId}`);
+      const response = await fetch(`${ipAddress}/categories?user_id=${userId}`);
       const data = await response.json();
-      if (data.success) setProducts(data.products);
+      if (data.success) {
+        setCategories(data.categories);
+      } else {
+        Alert.alert("Error", data.message || "Failed to fetch categories");
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      Alert.alert("Error", "Failed to fetch categories");
+    }
+  };
+
+  const fetchProducts = async (userId: string, search: string, category: string | null) => {
+    try {
+      setLoading(true);
+
+      let url = `${ipAddress}/search-products?user_id=${userId}`;
+      if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+      }
+      if (category) {
+        url += `&category=${encodeURIComponent(category)}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setProducts(data.products);
+        setFilteredProducts(data.products);
+      } else {
+        Alert.alert("Error", data.message || "Failed to fetch products");
+        setProducts([]);
+        setFilteredProducts([]);
+      }
     } catch (error) {
       console.error("Error fetching products:", error);
+      Alert.alert("Error", "Failed to fetch products");
+      setProducts([]);
+      setFilteredProducts([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCategoryPress = (category: string) => {
+    if (category === "All") {
+      setSelectedCategory(null);
+    } else {
+      setSelectedCategory(category);
     }
   };
 
@@ -91,21 +168,22 @@ const HomeScreen = () => {
   };
 
   const addProduct = async () => {
-    if (!userID || !id || !cate || !price || !image || !imageName) {
+    if (!userID || !id || !cate || !price) {
       Alert.alert("Error", "Please fill in all fields!");
       return;
     }
-
     const formData = new FormData();
     formData.append("user_id", userID);
-    formData.append("idsanpham", id);
+    formData.append("tensp", id);
     formData.append("loaisp", cate);
     formData.append("gia", price);
-    formData.append("hinhanh", {
-      uri: image,
-      name: imageName,
-      type: "image/jpeg",
-    } as any);
+    if (image) {
+      formData.append("hinhanh", {
+        uri: image,
+        name: imageName,
+        type: "image/jpeg",
+      } as any);
+    }
 
     try {
       const response = await fetch(`${ipAddress}/add_product`, {
@@ -117,7 +195,8 @@ const HomeScreen = () => {
       if (data.success) {
         Alert.alert("Success", "Product added successfully!");
         setModalVisible(false);
-        fetchProducts(userID);
+        fetchProducts(userID, searchQuery, selectedCategory);
+        fetchCategories(userID);
       } else {
         Alert.alert("Error", data.message || "Failed to add product");
       }
@@ -134,7 +213,7 @@ const HomeScreen = () => {
     }
 
     const formData = new FormData();
-    formData.append("idsanpham", id);
+    formData.append("tensp", id);
     formData.append("loaisp", cate);
     formData.append("gia", price);
     if (image && imageName) {
@@ -156,7 +235,8 @@ const HomeScreen = () => {
         Alert.alert("Success", data.message);
         setEditModalVisible(false);
         if (userID) {
-          fetchProducts(userID);
+          fetchProducts(userID, searchQuery, selectedCategory);
+          fetchCategories(userID);
         }
       } else {
         Alert.alert("Error", data.message);
@@ -186,6 +266,8 @@ const HomeScreen = () => {
               Alert.alert("Success", "Product deleted successfully!");
               setEditModalVisible(false);
               setProducts(products.filter((p) => p._id !== selectedProduct._id));
+              setFilteredProducts(filteredProducts.filter((p) => p._id !== selectedProduct._id));
+              fetchCategories(userID!);
             } else {
               Alert.alert("Error", result.message || "Failed to delete product!");
             }
@@ -200,7 +282,7 @@ const HomeScreen = () => {
 
   const openEditModal = (item: Product) => {
     setSelectedProduct(item);
-    setId(item.idsanpham);
+    setId(item.tensp);
     setCate(item.loaisp);
     setPrice(item.gia.toString());
     setImage(`${ipAddress}/uploads/${item.hinhanh}`);
@@ -225,40 +307,74 @@ const HomeScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Add Product Modal */}
-      <Modal visible={modalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={styles.modalScrollContent}>
-            <View style={styles.modalContent}>    
-              <Text style={styles.modalTitle}>Add Product</Text>
-              <TextInput style={styles.input} placeholder="Product Name" value={id} onChangeText={setId} />
-              <TextInput style={styles.input} placeholder="Category" value={cate} onChangeText={setCate} />
-              <TextInput style={styles.input} placeholder="Price" value={price} keyboardType="numeric" onChangeText={setPrice} />
-              <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
-                <Text style={styles.buttonText}>Select Image</Text>
-              </TouchableOpacity>
-              {image && <Image source={{ uri: image }} style={styles.previewImage} />}
-              <View style={styles.modalButtonContainer}>
-                <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-                  <Text style={styles.buttonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.saveButton} onPress={addProduct}>
-                  <Text style={styles.buttonText}>Add</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </ScrollView>
-        </View>
-      </Modal>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Tìm kiếm sản phẩm..."
+          value={tempSearchQuery} 
+          onChangeText={setTempSearchQuery} 
+        />
+      </View>
+
+      {/* Category View */}
+      <View style={styles.catecate}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoryScrollView}
+        contentContainerStyle={styles.categoryContainer}
+      >
+        <TouchableOpacity
+          style={[
+            styles.categoryButton,
+            selectedCategory === null && styles.categoryButtonSelected,
+          ]}
+          onPress={() => handleCategoryPress("All")}
+        >
+          <Text
+            style={[
+              styles.categoryText,
+              selectedCategory === null && styles.categoryTextSelected,
+            ]}
+          >
+            All
+          </Text>
+        </TouchableOpacity>
+        {categories.map((category) => (
+          <TouchableOpacity
+            key={category}
+            style={[
+              styles.categoryButton,
+              selectedCategory === category && styles.categoryButtonSelected,
+            ]}
+            onPress={() => handleCategoryPress(category)}
+          >
+            <Text
+              style={[
+                styles.categoryText,
+                selectedCategory === category && styles.categoryTextSelected,
+              ]}
+            >
+              {category}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+      </View>
 
       {/* Product List */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {products.length > 0 ? (
-          products.map((item) => (
+        {loading ? (
+          <View style={styles.noProducts}>
+            <Text style={styles.noProductsText}>Loading...</Text>
+          </View>
+        ) : filteredProducts.length > 0 ? (
+          filteredProducts.map((item) => (
             <View key={item._id} style={styles.productCard}>
               <Image source={{ uri: `${ipAddress}/uploads/${item.hinhanh}` }} style={styles.productImage} />
               <View style={styles.productDetails}>
-                <Text style={styles.productTitle}>{item.idsanpham}</Text>
+                <Text style={styles.productTitle}>{item.tensp}</Text>
                 <Text style={styles.productCategory}>{item.loaisp}</Text>
                 <Text style={styles.productPrice}>{item.gia.toLocaleString()} VNĐ</Text>
                 <TouchableOpacity
@@ -280,38 +396,69 @@ const HomeScreen = () => {
         )}
       </ScrollView>
 
+      {/* Add Product Modal */}
+      <Modal visible={modalVisible} transparent animationType="fade">
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 20}
+              style={styles.modalContainer}
+            >
+              <ScrollView contentContainerStyle={styles.modalScrollContent}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Add Product</Text>
+                  <TextInput style={styles.input} placeholder="Product Name" value={id} onChangeText={setId} />
+                  <TextInput style={styles.input} placeholder="Category" value={cate} onChangeText={setCate} />
+                  <TextInput style={styles.input} placeholder="Price" value={price} keyboardType="numeric" onChangeText={setPrice} />
+                  <TouchableOpacity style={styles.uploadBtn} onPress={pickImage}>
+                    <Text style={styles.buttonText}>Select Image</Text>
+                  </TouchableOpacity>
+                  {image && <Image source={{ uri: image }} style={styles.previewImage} />}
+                  <View style={styles.modalButtonContainer}>
+                    <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+                      <Text style={styles.buttonText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.saveButton} onPress={addProduct}>
+                      <Text style={styles.buttonText}>Add</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </ScrollView>
+            </KeyboardAvoidingView>
+          </View>
+      </Modal>
+
       {/* Edit Product Modal */}
- 
-<Modal visible={editModalVisible} transparent animationType="fade">
-  <KeyboardAvoidingView 
-    behavior={Platform.OS === "ios" ? "padding" : "height"} 
-    keyboardVerticalOffset={Platform.OS === "ios" ? 30 : 20} 
-    style={styles.modalOverlay}
-  >
-    <ScrollView contentContainerStyle={styles.modalScrollContent}>
-      <View style={styles.modalContent}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => setEditModalVisible(false)}>
-          <Text style={styles.closeButtonText}>×</Text>
-        </TouchableOpacity>
-        <Text style={styles.modalTitle}>Edit Product</Text>
-        <TextInput style={styles.input} placeholder="Product ID" value={id} onChangeText={setId} />
-        <TextInput style={styles.input} placeholder="Category" value={cate} onChangeText={setCate} />
-        <TextInput style={styles.input} placeholder="Price" value={price} keyboardType="numeric" onChangeText={setPrice} />
-        <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-          {image ? <Image source={{ uri: image }} style={styles.previewImage} /> : <Text>No Image</Text>}
-        </TouchableOpacity>
-        <View style={styles.modalButtonContainer}>
-          <TouchableOpacity style={styles.deleteButton} onPress={deleteProduct}>
-            <Text style={styles.buttonText}>Delete</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={updateProduct}>
-            <Text style={styles.buttonText}>Save</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </ScrollView>
-  </KeyboardAvoidingView>
-</Modal>
+      <Modal visible={editModalVisible} transparent animationType="fade">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 30 : 20}
+          style={styles.modalOverlay}
+        >
+          <ScrollView contentContainerStyle={styles.modalScrollContent}>
+            <View style={styles.modalContent}>
+              <TouchableOpacity style={styles.closeButton} onPress={() => setEditModalVisible(false)}>
+                <Text style={styles.closeButtonText}>×</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Edit Product</Text>
+              <TextInput style={styles.input} placeholder="Product ID" value={id} onChangeText={setId} />
+              <TextInput style={styles.input} placeholder="Category" value={cate} onChangeText={setCate} />
+              <TextInput style={styles.input} placeholder="Price" value={price} keyboardType="numeric" onChangeText={setPrice} />
+              <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+                {image ? <Image source={{ uri: image }} style={styles.previewImage} /> : <Text>No Image</Text>}
+              </TouchableOpacity>
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity style={styles.deleteButton} onPress={deleteProduct}>
+                  <Text style={styles.buttonText}>Delete</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.saveButton} onPress={updateProduct}>
+                  <Text style={styles.buttonText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 };
@@ -322,7 +469,7 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: Platform.OS === "ios" ? 50 : 30,
     backgroundColor: "#FFFFFF",
-    paddingBottom:100
+    paddingBottom: 100,
   },
   headerContainer: {
     flexDirection: "row",
@@ -338,6 +485,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  modalContainer: {},
   headerText: {
     fontSize: 24,
     fontWeight: "700",
@@ -351,6 +499,51 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  searchContainer: {
+    marginBottom: 15,
+  },
+  searchInput: {
+    height: 45,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    backgroundColor: "#fff",
+    fontSize: 16,
+  },
+  catecate:{
+    height:80,
+  },
+  categoryScrollView: {
+    height: 100,
+    marginBottom: 20,
+  },
+  categoryContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 5,
+    alignItems: "center",
+    height: "100%",
+  },
+  categoryButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    backgroundColor: "#F0F0F0",
+    marginRight: 10,
+    height: 40,
+    justifyContent: "center",
+  },
+  categoryButtonSelected: {
+    backgroundColor: "#3461FD",
+  },
+  categoryText: {
+    fontSize: 14,
+    color: "rgb(97, 103, 125)",
+    fontWeight: "600",
+  },
+  categoryTextSelected: {
+    color: "#FFFFFF",
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -361,7 +554,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 20, 
+    paddingVertical: 20,
   },
   modalContent: {
     width: "85%",
@@ -396,15 +589,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: "100%",
     alignItems: "center",
-    // backgroundColor:"rgb(108, 79, 209)",
   },
-  uploadBtn:{
+  uploadBtn: {
     padding: 12,
     borderRadius: 8,
     width: "100%",
     alignItems: "center",
-    backgroundColor:"rgb(108, 79, 209)",
-    marginBottom:15,
+    backgroundColor: "rgb(108, 79, 209)",
+    marginBottom: 15,
   },
   cancelButton: {
     flex: 1,
