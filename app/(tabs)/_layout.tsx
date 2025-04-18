@@ -1,9 +1,16 @@
 import { Redirect, Tabs } from "expo-router";
-import { Platform, View, StyleSheet, Pressable } from "react-native";
+import {
+  Platform,
+  View,
+  StyleSheet,
+  Pressable,
+  Text,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
+import { FontFamily } from "../constants/FontFamily";
 
 export default function TabLayout() {
   const { user } = useUser();
@@ -11,28 +18,13 @@ export default function TabLayout() {
 
   const [isApiSignedIn, setIsApiSignedIn] = useState<boolean | null>(null);
 
-  const logAsyncStorageKeys = async () => {
-    try {
-      const keys = await AsyncStorage.getAllKeys();
-      console.log("📌 AsyncStorage Keys:", keys);
-    } catch (error) {
-      console.error("❌ Lỗi khi lấy danh sách keys từ AsyncStorage:", error);
-    }
-  };
-
-  logAsyncStorageKeys();
-
   useEffect(() => {
     const checkLoginMethod = async () => {
       try {
         const emailApi = await AsyncStorage.getItem("email");
         const emailClerk = user?.primaryEmailAddress?.emailAddress || "";
         const storedEmail = emailApi || emailClerk;
-        console.log("storedEmail", storedEmail);
-
         setIsApiSignedIn(!!storedEmail);
-        if (storedEmail) {
-        }
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu từ AsyncStorage:", error);
       }
@@ -53,55 +45,89 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      screenOptions={({ route }) => ({
+      screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarItemStyle: styles.tabBarItem,
         tabBarShowLabel: false,
-        tabBarActiveTintColor: "#FFFFFF",
-        tabBarInactiveTintColor: "#fff",
         tabBarButton: (props) => {
           const { onPress, children } = props;
-          
           return (
             <Pressable
               onPress={onPress}
               style={styles.tabButton}
-              android_ripple={{color: 'rgba(255, 255, 255, 0.1)'}}
-              hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+              android_ripple={{ color: "rgba(0, 0, 0, 0.05)" }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               {children}
             </Pressable>
           );
-        }
-      })}
+        },
+      }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIcon, focused && { left: -11},]}>
-              <Ionicons size={26} name="planet-outline" color={focused ? "#000" : color} />
+          tabBarIcon: ({ focused }) => (
+            <View style={styles.iconContainer}>
+              <Ionicons
+                name="home-outline"
+                size={focused ? 30: 24}
+                color={focused ? "#00B86B" : "#000"}
+              />
+              <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+                Home
+              </Text>
             </View>
           ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="category"
         options={{
-          tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIcon, focused && { left: -10 },]}>
-              <Ionicons size={28} name="home" color={focused ? "#000" : color} />
+          tabBarIcon: ({ focused }) => (
+            <View style={styles.iconContainer}>
+              <Ionicons
+                name="albums-outline"
+                size={focused ? 30 : 24}
+                color={focused ? "#00B86B" : "#000"}
+              />
+              <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+                Category
+              </Text>
             </View>
           ),
         }}
       />
-        <Tabs.Screen
-        name="category"
+      <Tabs.Screen
+        name="shop"
         options={{
-          tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIcon]}>
-              <Ionicons size={26} name="copy-outline" color={focused ? "#000000" : color} />
+          tabBarIcon: ({ focused }) => (
+            <View style={styles.iconContainer}>
+              <Ionicons
+                name="storefront-outline"
+                size={focused ? 30 : 24}
+                color={focused ? "#00B86B" : "#000"}
+              />
+              <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+                Shop
+              </Text>
+            </View>
+          ),
+        }}
+      />
+         <Tabs.Screen
+        name="favourite"
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <View style={styles.iconContainer}>
+              <Ionicons
+                name="heart-outline"
+                size={focused ? 30 : 24}
+                color={focused ? "#00B86B" : "#000"}
+              />
+              <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+              Favourite
+              </Text>
             </View>
           ),
         }}
@@ -109,63 +135,61 @@ export default function TabLayout() {
       <Tabs.Screen
         name="account"
         options={{
-          tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIcon , focused && { left: 11 },]}>
-              <Ionicons size={26} name="person-outline" color={focused ? "#000000" : color} />
+          tabBarIcon: ({ focused }) => (
+            <View style={styles.iconContainer}>
+              <Ionicons
+                name="person-outline"
+                size={focused ? 26 : 24}
+                color={focused ? "#00B86B" : "#000"}
+              />
+              <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+                Account
+              </Text>
             </View>
           ),
         }}
       />
-
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
   tabBar: {
-    justifyContent: 'space-around', 
-    backgroundColor: "#222831", 
-    borderRadius: 30,
-    height: 60,
-    marginHorizontal: 30,
-    position: 'absolute',
-    bottom: 25,
+    position: "absolute",
+    bottom: 0,
     left: 0,
     right: 0,
-    elevation: 0,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    borderTopWidth: 0,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    height: 90,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: Platform.OS === "ios" ? 20 : 10,
     paddingTop: 5,
-  },
-  tabBarItem: {
-    paddingVertical: 8,
-    height: 50,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
   },
   tabButton: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   iconContainer: {
-    width: 59,
-    height: 59,
-    borderRadius: 30, 
-    justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 10,
+    justifyContent: "center",
+    width: 60,
+    height: 60,
   },
-  
-  activeIcon: {
-    backgroundColor: "#fff", 
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
+  tabLabel: {
+    fontSize: 12,
+    color: "#999",
+    marginTop: 4,
+    fontFamily: FontFamily.medium,
+  },
+  tabLabelActive: {
+    color: "#00B86B",
+    fontWeight: "600",
   },
 });
