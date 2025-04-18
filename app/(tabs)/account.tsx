@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-const SettingsScreen = () => {
+const Account = () => {
   const { signOut, user } = useClerk();
   const [storedUserData, setStoredUserData] = useState<{ full_name: string; username: string; gender: string } | null>(null);
   const [storedEmail, setStoredEmail] = useState<string | null>(null);
@@ -82,7 +82,7 @@ const SettingsScreen = () => {
   );
 };
 
-export default SettingsScreen;
+export default Account;
 
 const styles = StyleSheet.create({
   container: {
