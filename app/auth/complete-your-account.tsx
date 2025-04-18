@@ -11,10 +11,10 @@ import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useEffect, useMemo, useState } from "react";
 
-import TextInput from "@/components/Forms/TextInput";
-import RadioButtonInput from "@/components/Forms/RadioButtonInput";
+import TextInput from "@/app/components/common/Forms/TextInput";
+import RadioButtonInput from "@/app/components/common/Forms/RadioButtonInput";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ipAddress } from "../ip";
+import { ipAddress } from "../constants/ip";
 
 const CompleteYourAccountScreen = () => {
   const { user, isLoaded } = useUser();

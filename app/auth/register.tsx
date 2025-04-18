@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, Alert, StyleSheet, Image, TouchableOpacity, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import Input from "@/components/Input";
-import Button from "@/components/Button";
+import Input from "@/app/components/common/Input";
+import Button from "@/app/components/common/Button";
 import { ipAddress } from "../constants/ip";
 
 export default function Register() {
