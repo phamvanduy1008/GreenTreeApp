@@ -7,7 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import {useRouter } from "expo-router";
-import { ipAddress } from "../ip";
+import { ipAddress } from "../constants/ip";
 export const useWarmUpBrowser = () => {
   useEffect(() => {
     // Warm up the android browser to improve UX
@@ -25,6 +25,7 @@ const Login = () => {
   const [email, setEmail] = useState(""); 
   const [password, setPassword] = useState("");
 
+ 
   const handleLogin = async () => {
     try {
       const response = await fetch(`${ipAddress}/login`, {
@@ -33,18 +34,15 @@ const Login = () => {
         body: JSON.stringify({ email, password }),
       });
   
-      const data = await response.json();
-      console.log("data:", data);
-
+      const data = await response.json();   
+      
       if (response.ok && data.success && data.user) {
         Alert.alert("Đăng nhập thành công!");
   
         await AsyncStorage.setItem("email", email);
-        await AsyncStorage.setItem("userData", JSON.stringify(data.user));
-        await AsyncStorage.setItem("userId", data.user._id); // Lưu _id của user
-        console.log("data.user.profile",data.user._id);
-        
-        if (data.user.profile.full_name === "") {
+        await AsyncStorage.setItem("userData", JSON.stringify(data.user))
+
+        if (data.user.onboarding_completed === 0) {
           router.push("/auth/complete-your-account");
         } else {
           router.replace("/(tabs)");

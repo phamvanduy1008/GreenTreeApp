@@ -3,7 +3,7 @@ import { View, Text, Alert, StyleSheet, Image, TouchableOpacity, ScrollView } fr
 import { useRouter } from "expo-router";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
-import { ipAddress } from "../ip";
+import { ipAddress } from "../constants/ip";
 
 export default function Register() {
   const [email, setEmail] = useState("");
