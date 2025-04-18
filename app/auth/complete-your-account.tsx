@@ -14,7 +14,8 @@ import { useEffect, useMemo, useState } from "react";
 import TextInput from "@/components/Forms/TextInput";
 import RadioButtonInput from "@/components/Forms/RadioButtonInput";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ipAddress } from "../constants/ip";
+import { ipAddress } from "../ip";
+
 const CompleteYourAccountScreen = () => {
   const { user, isLoaded } = useUser();
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +36,11 @@ const CompleteYourAccountScreen = () => {
     
     try {
       setIsLoading(true);
-      const email = user?.primaryEmailAddress?.emailAddress || "";
+
+      const emailApi = await AsyncStorage.getItem("email");
+      const emailClerk = user?.primaryEmailAddress?.emailAddress || "";
+      const email = emailApi || emailClerk;
+      console.log("email", email);
 
       await user?.update({
         unsafeMetadata: {
@@ -46,12 +51,12 @@ const CompleteYourAccountScreen = () => {
         },
       });
       await AsyncStorage.setItem(
-        "inforData",
+        "userData",
         JSON.stringify({ full_name, username, gender })
       );
       
       if(email){
-        await fetch(`${ipAddress}/complete-onboarding`, {
+        await fetch(`${ipAddress}/update-infor`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, full_name, username, gender }),
@@ -59,7 +64,6 @@ const CompleteYourAccountScreen = () => {
       }
       
       await user?.reload();
-
       return router.push("/(tabs)");
     } catch (error: any) {
       if (error.message === "That username is taken. Please try another.") {
