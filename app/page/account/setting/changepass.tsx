@@ -13,7 +13,7 @@ import {
 import { Stack, router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ipAddress } from "../ip";
+import { ipAddress } from "../../../constants/ip";
 import { Ionicons } from "@expo/vector-icons";
 
 const ChangePass = () => {

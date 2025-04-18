@@ -43,7 +43,7 @@ const Account = () => {
 
   const handleEdit = () => {
     try {
-      router.push("/page/changepass");
+      router.push("/page/account/setting/changepass");
     } catch (error) {
       console.error("❌ Lỗi khi điều hướng đến màn hình chỉnh sửa:", error);
     }
@@ -89,6 +89,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
     paddingTop: Platform.OS === "ios" ? 50 : 30,
+    fontFamily: 'Poppins-Regular', 
   },
   headerContainer: {
     flexDirection: "row",

@@ -1,11 +1,11 @@
-import SocialLoginButton from "@/components/SocialLoginButton";
+import SocialLoginButton from "@/app/components/common/SocialLoginButton";
 import { Alert, StyleSheet, Text, TouchableOpacity, View,ScrollView, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 import {useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Input from "@/components/Input";
-import Button from "@/components/Button";
+import Input from "@/app/components/common/Input";
+import Button from "@/app/components/common/Button";
 import {useRouter } from "expo-router";
 import { ipAddress } from "../constants/ip";
 export const useWarmUpBrowser = () => {
