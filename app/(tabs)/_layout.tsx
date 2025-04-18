@@ -81,7 +81,7 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIcon, focused && { left: -11},]}>
-              <Ionicons size={26} name="home" color={focused ? "#000" : color} />
+              <Ionicons size={26} name="planet-outline" color={focused ? "#000" : color} />
             </View>
           ),
         }}
@@ -91,31 +91,32 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.activeIcon, focused && { left: -10 },]}>
-              <Ionicons size={28} name="compass-outline" color={focused ? "#000" : color} />
+              <Ionicons size={28} name="home" color={focused ? "#000" : color} />
+            </View>
+          ),
+        }}
+      />
+        <Tabs.Screen
+        name="category"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconContainer, focused && styles.activeIcon]}>
+              <Ionicons size={26} name="copy-outline" color={focused ? "#000000" : color} />
             </View>
           ),
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="account"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIcon]}>
+            <View style={[styles.iconContainer, focused && styles.activeIcon , focused && { left: 11 },]}>
               <Ionicons size={26} name="person-outline" color={focused ? "#000000" : color} />
             </View>
           ),
         }}
       />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeIcon, , focused && { left: 10.7},]}>
-              <Ionicons size={26} name="settings-outline" color={focused ? "#000" : color} />
-            </View>
-          ),
-        }}
-      />
+
     </Tabs>
   );
 }
@@ -151,8 +152,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   iconContainer: {
-    width: 60,
-    height: 60,
+    width: 59,
+    height: 59,
     borderRadius: 30, 
     justifyContent: "center",
     alignItems: "center",
