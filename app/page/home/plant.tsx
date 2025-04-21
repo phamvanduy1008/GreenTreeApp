@@ -75,7 +75,7 @@ const PlantTheTree: React.FC = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView contentContainerStyle={styles.scroll__content}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll__content}>
         <View style={styles.header__container}>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color={Colors.primary} />
