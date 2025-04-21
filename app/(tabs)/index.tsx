@@ -149,6 +149,7 @@ const Home: React.FC = () => {
             onPress={() => toggleRowExpansion(data._id)}
             disabled={isExpanded}
           >
+             <View style={styles.card__wrapper}>
             <ImageBackground
               source={getImageForPlant(data.plant.name)}
               style={styles.card__image}
@@ -198,6 +199,7 @@ const Home: React.FC = () => {
                 </>
               )}
             </ImageBackground>
+              </View>
           </TouchableOpacity>
         );
       }
@@ -212,7 +214,7 @@ const Home: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll__content}>
+      <ScrollView   showsVerticalScrollIndicator={false}  contentContainerStyle={styles.scroll__content}>
         <View style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.header__title}>Chăm sóc cây trồng</Text>
@@ -259,6 +261,11 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     alignItems: "center",
   },
+  card__wrapper: {
+    flex: 1,
+    borderRadius: 15,
+    overflow: "hidden", 
+  },
   content: {
     width: "100%",
     paddingHorizontal: 20,
@@ -273,20 +280,21 @@ const styles = StyleSheet.create({
   card__row_container: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 15,
+    marginBottom:15,
   },
+
   card: {
     width: "48%",
     height: 170,
     borderRadius: 15,
-    overflow: "hidden",
     backgroundColor: "#FFFFFF",
-    elevation: 3,
-    shadowColor: "#000",
+      elevation: 3,
+      shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
   },
+  
   card__expanded: {
     height: 170,
   },
