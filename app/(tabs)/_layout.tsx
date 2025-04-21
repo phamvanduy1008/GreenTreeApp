@@ -74,9 +74,9 @@ export default function TabLayout() {
                 size={focused ? 30: 24}
                 color={focused ? "#00B86B" : "#000"}
               />
-              <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+              {/* <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
                 Home
-              </Text>
+              </Text> */}
             </View>
           ),
         }}
@@ -88,12 +88,12 @@ export default function TabLayout() {
             <View style={styles.iconContainer}>
               <Ionicons
                 name="albums-outline"
-                size={focused ? 30 : 24}
+                size={focused ? 32 : 24}
                 color={focused ? "#00B86B" : "#000"}
               />
-              <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+              {/* <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
                 Category
-              </Text>
+              </Text> */}
             </View>
           ),
         }}
@@ -105,12 +105,12 @@ export default function TabLayout() {
             <View style={styles.iconContainer}>
               <Ionicons
                 name="storefront-outline"
-                size={focused ? 30 : 24}
+                size={focused ? 32 : 24}
                 color={focused ? "#00B86B" : "#000"}
               />
-              <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+              {/* <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
                 Shop
-              </Text>
+              </Text> */}
             </View>
           ),
         }}
@@ -122,12 +122,12 @@ export default function TabLayout() {
             <View style={styles.iconContainer}>
               <Ionicons
                 name="heart-outline"
-                size={focused ? 30 : 24}
+                size={focused ? 32 : 24}
                 color={focused ? "#00B86B" : "#000"}
               />
-              <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+              {/* <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
               Favourite
-              </Text>
+              </Text> */}
             </View>
           ),
         }}
@@ -139,12 +139,12 @@ export default function TabLayout() {
             <View style={styles.iconContainer}>
               <Ionicons
                 name="person-outline"
-                size={focused ? 26 : 24}
+                size={focused ? 28 : 24}
                 color={focused ? "#00B86B" : "#000"}
               />
-              <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+              {/* <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
                 Account
-              </Text>
+              </Text> */}
             </View>
           ),
         }}
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 90,
+    height: 85,
     backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
