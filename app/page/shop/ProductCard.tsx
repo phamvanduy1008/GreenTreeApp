@@ -6,17 +6,22 @@ type Product = {
   _id: string;
   name: string;
   description: string;
-  price: string;
+  price: number;
   status: string;
   image: string;
   evaluate: number;
 };
 
-const ProductCard = ({ item, formatPrice }: { item: Product; formatPrice: (price: string) => string }) => {
+const ProductCard = ({ item }: { item: Product}) => {
   const router = useRouter();
+  
+  const formatPrice = (price: number): string => {
+    return `${price.toLocaleString('vi-VN')} Đ`;
+  };
+  
 
   const handlePress = () => {
-    router.push(`../productDetail/${item._id}`);
+    router.push(`/page/productDetail/${item._id}`);
   };
 
   return (
