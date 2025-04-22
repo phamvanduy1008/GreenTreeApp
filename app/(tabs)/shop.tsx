@@ -14,14 +14,15 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { FontFamily } from '../constants/FontFamily';
 import { ipAddress } from '../constants/ip';
-import CategoryCard from '../components/specific/shop/CategoryCard';
-import ProductCard from '../components/specific/shop/ProductCard';
+import CategoryCard from '../page/shop/CategoryCard';
+import ProductCard from '../page/shop/ProductCard';
+
 
 type Product = {
   _id: string;
   name: string;
   description: string;
-  price: string;
+  price: number;
   status: string;
   image: string;
   evaluate: number;
@@ -66,11 +67,7 @@ export default function ShopScreen() {
 
     fetchData();
   }, []);
-
-  const formatPrice = (price:string) => {
-    const formatted = typeof price === 'string' ? parseInt(price, 10) : price;
-    return formatted.toLocaleString('vi-VN') + ' Đ';
-  };
+  
 
   return (
     <ScrollView   showsVerticalScrollIndicator={false} 
@@ -109,6 +106,7 @@ export default function ShopScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         data={categories}
+        keyExtractor={(item) => item._id}
         renderItem={({ item }) => <CategoryCard item={item} />}
         contentContainerStyle={styles.productList}
       />
@@ -123,7 +121,8 @@ export default function ShopScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         data={products.slice(0, 3)}
-        renderItem={({ item }) => <ProductCard item={item} formatPrice={formatPrice} />}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item }) => <ProductCard item={item} />}
         contentContainerStyle={styles.productList}
       />
 
@@ -137,38 +136,45 @@ export default function ShopScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         data={products}
-        renderItem={({ item }) => <ProductCard item={item} formatPrice={formatPrice} />}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item }) => <ProductCard item={item}  />}
         contentContainerStyle={styles.productList}
       />
 
 <View style={styles.sectionHeader}>
   <Text style={styles.sectionTitle}>Tất cả sản phẩm</Text>
 </View>
-
 <View style={styles.allProductContainer}>
   {Array(Math.ceil(products.length / 2))
     .fill(null)
     .map((_, rowIndex) => (
       <View key={rowIndex} style={styles.gridRow}>
         {products[rowIndex * 2] && (
-          <View style={styles.productCardWrapper}>
+          <View
+            key={products[rowIndex * 2]._id}
+            style={styles.productCardWrapper}
+          >
             <ProductCard
               item={products[rowIndex * 2]}
-              formatPrice={formatPrice}
+              
             />
           </View>
         )}
         {products[rowIndex * 2 + 1] && (
-          <View style={[styles.productCardWrapper, { marginLeft: 10 }]}>
+          <View
+            key={products[rowIndex * 2 + 1]._id}
+            style={[styles.productCardWrapper, { marginLeft: 10 }]}
+          >
             <ProductCard
               item={products[rowIndex * 2 + 1]}
-              formatPrice={formatPrice}
+              
             />
           </View>
         )}
       </View>
     ))}
 </View>
+
     </ScrollView>
   );
 }
