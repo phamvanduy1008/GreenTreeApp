@@ -81,18 +81,18 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="category"
+     <Tabs.Screen
+        name="favourite"
         options={{
           tabBarIcon: ({ focused }) => (
             <View style={styles.iconContainer}>
               <Ionicons
-                name="albums-outline"
+                name="heart-outline"
                 size={focused ? 32 : 24}
                 color={focused ? "#00B86B" : "#000"}
               />
               {/* <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
-                Category
+              Favourite
               </Text> */}
             </View>
           ),
@@ -115,23 +115,24 @@ export default function TabLayout() {
           ),
         }}
       />
-         <Tabs.Screen
-        name="favourite"
+        <Tabs.Screen
+        name="cart"
         options={{
           tabBarIcon: ({ focused }) => (
             <View style={styles.iconContainer}>
               <Ionicons
-                name="heart-outline"
+                name="cart-outline"
                 size={focused ? 32 : 24}
                 color={focused ? "#00B86B" : "#000"}
               />
               {/* <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
-              Favourite
+                Category
               </Text> */}
             </View>
           ),
         }}
       />
+        
       <Tabs.Screen
         name="account"
         options={{
