@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { FontFamily } from '../constants/FontFamily';
 import { ipAddress } from '../constants/ip';
 import ProductCard from '../page/shop/ProductCard';
+import { useRouter } from 'expo-router';
 
 interface Product {
   _id: string;
@@ -48,6 +49,8 @@ const ShopScreen: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState<string>('');
+
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -101,6 +104,11 @@ const ShopScreen: React.FC = () => {
     }
   };
 
+  const toSearch = () =>{
+    router.push('../page/search/Search');
+
+  }
+
   const renderProductRow = (data: Product[]) => {
     const rows: JSX.Element[] = [];
     for (let i = 0; i < data.length; i += 2) {
@@ -146,15 +154,24 @@ const ShopScreen: React.FC = () => {
       case 'search':
         return (
           <View style={styles.searchContainer}>
-            <View style={styles.searchWrapper}>
-              <Ionicons name="search-outline" size={20} color="#888" style={styles.searchIcon} />
+          <TouchableOpacity style={styles.searchWrapper} onPress={toSearch}>
+            <Ionicons
+              name="search-outline"
+              size={20}
+              color="#888"
+              style={styles.searchIcon}
+            />
+            <View pointerEvents="none" style={{ flex: 1 }}>
               <TextInput
+                editable={false}
                 style={styles.searchInput}
                 placeholder="Tìm kiếm"
                 placeholderTextColor="#888"
               />
-            </View>
-          </View>
+    </View>
+  </TouchableOpacity>
+</View>
+
         );
 
       case 'banner':
