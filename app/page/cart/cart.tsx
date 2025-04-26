@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { ipAddress } from "@/app/constants/ip";
-import { Colors } from "../../../app/constants/Colors";
+import { Colors } from "../../constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -37,6 +37,8 @@ const Cart = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [selectAll, setSelectAll] = useState<boolean>(false);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   const formatPrice = (price: number) => {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -72,6 +74,7 @@ const Cart = () => {
       console.log("Phản hồi API:", data);
       if (response.ok) {
         setCartItems(data);
+        setSelectedItems([]); // Reset selected items when fetching new cart
         calculateTotalPrice(data);
       } else {
         console.error("Lỗi khi lấy giỏ hàng:", data || "Lỗi không xác định");
@@ -129,6 +132,7 @@ const Cart = () => {
         setCartItems((prevItems: CartItem[]) =>
           prevItems.filter((item: CartItem) => item._id !== cartId)
         );
+        setSelectedItems((prev) => prev.filter((id) => id !== cartId));
         calculateTotalPrice(
           cartItems.filter((item: CartItem) => item._id !== cartId)
         );
@@ -136,6 +140,31 @@ const Cart = () => {
     } catch (error) {
       console.error("Lỗi khi xóa sản phẩm:", error);
     }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(cartItems.map((item) => item._id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const toggleItemSelection = (cartId: string) => {
+    setSelectedItems((prev) => {
+      if (prev.includes(cartId)) {
+        const newSelection = prev.filter((id) => id !== cartId);
+        setSelectAll(false);
+        return newSelection;
+      } else {
+        const newSelection = [...prev, cartId];
+        if (newSelection.length === cartItems.length) {
+          setSelectAll(true);
+        }
+        return newSelection;
+      }
+    });
   };
 
   useEffect(() => {
@@ -146,13 +175,26 @@ const Cart = () => {
 
   const renderItem = ({ item }: { item: CartItem }) => (
     <View style={styles.item__container}>
-      <Image
-        source={{ uri: item.product.image }}
-        style={styles.item__image}
-      />
+      <View style={styles.left__column}>
+        <TouchableOpacity
+          style={styles.item__checkbox}
+          onPress={() => toggleItemSelection(item._id)}
+        >
+          <Ionicons
+            name={
+              selectedItems.includes(item._id) ? "checkbox" : "square-outline"
+            }
+            size={24}
+            color={Colors.primary}
+          />
+        </TouchableOpacity>
+      </View>
+      <Image source={{ uri: item.product.image }} style={styles.item__image} />
       <View style={styles.item__details}>
-        <View style={styles.left__column}>
-          <Text style={styles.item__name}>{item.product.name.toUpperCase()}</Text>
+        <View style={styles.mid_column}>
+          <Text style={styles.item__name}>
+            {item.product.name.toUpperCase()}
+          </Text>
           <View style={styles.quantity__container}>
             <TouchableOpacity
               onPress={() => updateQuantity(item._id, item.quantity - 1)}
@@ -177,7 +219,7 @@ const Cart = () => {
             <Text style={styles.remove__text}>×</Text>
           </TouchableOpacity>
           <Text style={styles.item__price}>
-            {formatPrice(item.product.price)} VND
+            {formatPrice(item.product.price)} ₫
           </Text>
         </View>
       </View>
@@ -194,24 +236,46 @@ const Cart = () => {
         >
           <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.header__title}>Giỏ hàng</Text>
-        <View style={styles.header__spacer} />
+        <View style={styles.title__container}>
+          <Text style={styles.header__title}>Giỏ hàng</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => console.log("Message icon pressed")}
+          style={styles.message__button}
+        >
+          <Ionicons
+            name="chatbubble-outline"
+            size={20}
+            color={Colors.primary}
+          />
+        </TouchableOpacity>
       </View>
       {cartItems.length === 0 ? (
         <Text style={styles.empty}>Giỏ hàng của bạn trống.</Text>
       ) : (
-        <FlatList
-          data={cartItems}
-          renderItem={renderItem}
-          keyExtractor={(item: CartItem) => item._id}
-          contentContainerStyle={styles.list}
-        />
+        <View style={{ flex: 1 }}>
+          <TouchableOpacity
+            style={styles.checkbox__container}
+            onPress={toggleSelectAll}
+          >
+            <Ionicons
+              name={selectAll ? "checkbox" : "square-outline"}
+              size={24}
+              color={Colors.primary}
+            />
+            <Text style={styles.checkbox__text}>Chọn tất cả</Text>
+          </TouchableOpacity>
+          <FlatList
+            data={cartItems}
+            renderItem={renderItem}
+            keyExtractor={(item: CartItem) => item._id}
+            contentContainerStyle={{ paddingBottom: 100 }}
+          />
+        </View>
       )}
       <TouchableOpacity style={styles.checkout__button}>
         <Text style={styles.checkout__text}>Đi đến thanh toán</Text>
-        <Text style={styles.checkout__price}>
-          {formatPrice(totalPrice)} VND
-        </Text>
+        <Text style={styles.checkout__price}>{formatPrice(totalPrice)} ₫</Text>
       </TouchableOpacity>
     </View>
   );
@@ -226,12 +290,11 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginHorizontal: 16,
-    marginBottom: 20,
+    marginBottom: 15,
+    marginHorizontal: 10,
     marginTop: Platform.OS === "android" ? 50 : 0,
     backgroundColor: "#FFFFFF",
-    padding: 12,
+    padding: 10,
     borderRadius: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -239,36 +302,61 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
   },
+  header__button: {
+    padding: 8,
+  },
+  title__container: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   header__title: {
     fontSize: 20,
     fontWeight: "600",
     color: Colors.primary,
     letterSpacing: 0.5,
+    marginRight: 8,
   },
-  header__button: {
+  message__button: {
     padding: 8,
-  },
-  header__spacer: {
-    width: 24,
   },
   empty: {
     fontSize: 16,
     textAlign: "center",
     marginTop: 20,
   },
-  list: {
-    paddingBottom: 100,
+  checkbox__container: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+  },
+  checkbox__text: {
+    fontSize: 16,
+    marginLeft: 10,
+    color: Colors.primary,
   },
   item__container: {
     flexDirection: "row",
     alignItems: "center",
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    margin: 10,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  item__checkbox: {
+    marginRight: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
   item__image: {
-    width: 70,
-    height: 70,
+    width: 60,
+    height: 60,
     marginRight: 15,
     borderRadius: 20,
   },
@@ -278,18 +366,23 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   left__column: {
-    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  mid_column: {
     justifyContent: "space-between",
+    alignItems: "flex-start",
   },
   right__column: {
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "flex-end",
   },
   item__name: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "500",
     color: "black",
-    marginTop: 15,
+    marginTop: 5,
+    marginBottom: 25,
   },
   quantity__container: {
     flexDirection: "row",
@@ -298,6 +391,7 @@ const styles = StyleSheet.create({
   quantity__button: {
     width: 35,
     height: 35,
+    marginBottom: 5,
     backgroundColor: "#FFFFFF",
     borderRadius: 10,
     justifyContent: "center",
@@ -311,22 +405,22 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   quantity__text: {
-    fontSize: 18,
-    marginHorizontal: 15,
+    fontSize: 14,
+    marginHorizontal: 10,
     color: "black",
   },
   remove__button: {
-    paddingVertical: 5,
-    marginBottom: 20,
+    marginTop: -7,
   },
   remove__text: {
     fontSize: 30,
     color: "#666",
   },
   item__price: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "500",
     color: Colors.primary,
+    marginBottom: 10,
   },
   checkout__button: {
     position: "absolute",
