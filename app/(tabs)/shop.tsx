@@ -15,6 +15,7 @@ import { FontFamily } from '../constants/FontFamily';
 import { ipAddress } from '../constants/ip';
 import ProductCard from '../page/shop/ProductCard';
 import { useRouter } from 'expo-router';
+import { Colors } from '../constants/Colors';
 
 interface Product {
   _id: string;
@@ -148,6 +149,13 @@ const ShopScreen: React.FC = () => {
               <Image style={styles.logo} source={require('../../assets/images/logo.jpg')} />
               <Text style={styles.locationText}>GreenTree App</Text>
             </View>
+            <View style={styles.icon}>
+            <Ionicons
+                name="cart-outline"
+                size={28}
+                color={"#000"}
+              />
+              </View>
           </View>
         );
 
@@ -321,10 +329,12 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
   },
   header: {
+    position:"relative",
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     padding: 15,
+    marginLeft:30
   },
   logo: {
     width: 50,
@@ -333,6 +343,12 @@ const styles = StyleSheet.create({
   location: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent:"flex-start",
+  },
+  icon:{
+    position:"absolute",
+    width:100,
+    right:-40,
   },
   allProductList: {
     padding: 15,
@@ -430,6 +446,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
     marginTop: 20,
+    borderWidth:0.3,
+    borderColor:Colors.primary
   },
   bannerImage: {
     width: '100%',
