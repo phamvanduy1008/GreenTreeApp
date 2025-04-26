@@ -115,13 +115,13 @@ export default function TabLayout() {
           ),
         }}
       />
-        <Tabs.Screen
-        name="cart"
+       <Tabs.Screen
+        name="notice"
         options={{
           tabBarIcon: ({ focused }) => (
             <View style={styles.iconContainer}>
               <Ionicons
-                name="cart-outline"
+                name="notifications-outline"
                 size={focused ? 32 : 24}
                 color={focused ? "#00B86B" : "#000"}
               />
