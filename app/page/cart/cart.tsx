@@ -63,6 +63,13 @@ const Cart = () => {
     getUserId();
   }, []);
 
+  const calculateTotalPrice = (items: CartItem[], selected: string[]) => {
+    const total = items
+      .filter((item) => selected.includes(item._id))
+      .reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    setTotalPrice(total);
+  };
+
   const fetchCartItems = async () => {
     if (!userId) {
       console.error("Không có userId để lấy giỏ hàng");
@@ -74,22 +81,14 @@ const Cart = () => {
       console.log("Phản hồi API:", data);
       if (response.ok) {
         setCartItems(data);
-        setSelectedItems([]); // Reset selected items when fetching new cart
-        calculateTotalPrice(data);
+        setSelectedItems([]);
+        calculateTotalPrice(data, []);
       } else {
         console.error("Lỗi khi lấy giỏ hàng:", data || "Lỗi không xác định");
       }
     } catch (error) {
       console.error("Lỗi khi lấy giỏ hàng:", error);
     }
-  };
-
-  const calculateTotalPrice = (items: CartItem[]) => {
-    const total = items.reduce(
-      (sum: number, item: CartItem) => sum + item.product.price * item.quantity,
-      0
-    );
-    setTotalPrice(total);
   };
 
   const updateQuantity = async (cartId: string, newQuantity: number) => {
@@ -102,20 +101,13 @@ const Cart = () => {
       });
       const updatedItem: CartItem = await response.json();
       if (response.ok) {
-        setCartItems((prevItems: CartItem[]) =>
-          prevItems.map((item: CartItem) =>
-            item._id === cartId
-              ? { ...item, quantity: updatedItem.quantity }
-              : item
-          )
+        const updatedItems = cartItems.map((item: CartItem) =>
+          item._id === cartId
+            ? { ...item, quantity: updatedItem.quantity }
+            : item
         );
-        calculateTotalPrice(
-          cartItems.map((item: CartItem) =>
-            item._id === cartId
-              ? { ...item, quantity: updatedItem.quantity }
-              : item
-          )
-        );
+        setCartItems(updatedItems);
+        calculateTotalPrice(updatedItems, selectedItems);
       }
     } catch (error) {
       console.error("Lỗi khi cập nhật số lượng:", error);
@@ -129,12 +121,14 @@ const Cart = () => {
       });
       const result = await response.json();
       if (response.ok) {
-        setCartItems((prevItems: CartItem[]) =>
-          prevItems.filter((item: CartItem) => item._id !== cartId)
+        const updatedItems = cartItems.filter(
+          (item: CartItem) => item._id !== cartId
         );
+        setCartItems(updatedItems);
         setSelectedItems((prev) => prev.filter((id) => id !== cartId));
         calculateTotalPrice(
-          cartItems.filter((item: CartItem) => item._id !== cartId)
+          updatedItems,
+          selectedItems.filter((id) => id !== cartId)
         );
       }
     } catch (error) {
@@ -145,8 +139,11 @@ const Cart = () => {
   const toggleSelectAll = () => {
     if (selectAll) {
       setSelectedItems([]);
+      calculateTotalPrice(cartItems, []);
     } else {
-      setSelectedItems(cartItems.map((item) => item._id));
+      const allItemIds = cartItems.map((item) => item._id);
+      setSelectedItems(allItemIds);
+      calculateTotalPrice(cartItems, allItemIds);
     }
     setSelectAll(!selectAll);
   };
@@ -156,12 +153,14 @@ const Cart = () => {
       if (prev.includes(cartId)) {
         const newSelection = prev.filter((id) => id !== cartId);
         setSelectAll(false);
+        calculateTotalPrice(cartItems, newSelection);
         return newSelection;
       } else {
         const newSelection = [...prev, cartId];
         if (newSelection.length === cartItems.length) {
           setSelectAll(true);
         }
+        calculateTotalPrice(cartItems, newSelection);
         return newSelection;
       }
     });
@@ -172,6 +171,10 @@ const Cart = () => {
       fetchCartItems();
     }
   }, [userId]);
+
+  useEffect(() => {
+    calculateTotalPrice(cartItems, selectedItems);
+  }, [cartItems, selectedItems]);
 
   const renderItem = ({ item }: { item: CartItem }) => (
     <View style={styles.item__container}>
@@ -273,7 +276,27 @@ const Cart = () => {
           />
         </View>
       )}
-      <TouchableOpacity style={styles.checkout__button}>
+      <TouchableOpacity
+        style={[
+          styles.checkout__button,
+          selectedItems.length === 0 && { opacity: 0.5 },
+        ]}
+        disabled={selectedItems.length === 0}
+        onPress={() => {
+          if (selectedItems.length > 0) {
+            const selectedCartItems = cartItems.filter((item) =>
+              selectedItems.includes(item._id)
+            );
+            router.push({
+              pathname: "../payment/payment",
+              params: {
+                selectedItems: JSON.stringify(selectedCartItems),
+                totalPrice: totalPrice.toString(),
+              },
+            });
+          }
+        }}
+      >
         <Text style={styles.checkout__text}>Đi đến thanh toán</Text>
         <Text style={styles.checkout__price}>{formatPrice(totalPrice)} ₫</Text>
       </TouchableOpacity>
@@ -290,6 +313,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 15,
     marginHorizontal: 10,
     marginTop: Platform.OS === "android" ? 50 : 0,
@@ -305,17 +329,17 @@ const styles = StyleSheet.create({
   header__button: {
     padding: 8,
   },
-  title__container: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   header__title: {
     fontSize: 20,
     fontWeight: "600",
     color: Colors.primary,
     letterSpacing: 0.5,
     marginRight: 8,
+  },
+  title__container: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   message__button: {
     padding: 8,
