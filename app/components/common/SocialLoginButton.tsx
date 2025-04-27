@@ -38,11 +38,11 @@ const SocialLoginButton = ({
     }
 
     if (strategy === "facebook") {
-      return "Continue with Facebook";
+      return "Tiếp tục với Facebook";
     } else if (strategy === "google") {
-      return "Continue with Google";
+      return "Tiếp tục với Google";
     } else if (strategy === "apple") {
-      return "Continue with Apple";
+      return "Tiếp tục với Apple";
     }
   };
 

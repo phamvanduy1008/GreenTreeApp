@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import Input from "@/app/components/common/Input";
 import Button from "@/app/components/common/Button";
 import { ipAddress } from "../constants/ip";
+import { Colors } from "../constants/Colors";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
   registerTitle: {
     fontSize: 32,
     fontWeight: "700",
-    color: "rgb(42, 78, 202)",
+    color: Colors.primary,
     textAlign: "center",
     marginBottom: 20,
     fontFamily: "Montserrat",
@@ -176,7 +177,7 @@ const styles = StyleSheet.create({
   btnToRegister: {
     width: "98%",
     height: 60,
-    backgroundColor: "#3461FD",
+    backgroundColor: Colors.primary,
     borderRadius: 15,
     marginTop: 50,
     alignItems: "center",
@@ -196,6 +197,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   link: {
-    color: "blue",
+    color: Colors.primary,
   },
 });
