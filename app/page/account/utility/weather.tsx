@@ -86,7 +86,7 @@ const WeatherInput: React.FC<WeatherInputProps> = ({
             activeOpacity={0.7}
           >
             <Image
-              source={require("../../../assets/icons/weather/search.png")}
+              source={require("../../../../assets/icons/weather/search.png")}
               style={styles.icon__mini}
             />
           </TouchableOpacity>
@@ -105,7 +105,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({
 }) => {
   const weatherIcon =
     weatherIcons[data.weather[0].main] ||
-    require("../../../assets/icons/weather/default.png");
+    require("../../../../assets/icons/weather/default.png");
   const descriptionTranslations: Translations = {
     "few clouds": "Ít mây",
     "scattered clouds": "Mây rải rác",
@@ -165,7 +165,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({
         <View style={styles.info__row}>
           <View style={[styles.advanced__container, { marginRight: 10 }]}>
             <Image
-              source={require("../../../assets/icons/weather/wind.png")}
+              source={require("../../../../assets/icons/weather/wind.png")}
               style={[styles.icon__mini, { marginRight: 5 }]}
             />
             <Text style={styles.advanced__text}>
@@ -174,7 +174,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({
           </View>
           <View style={styles.advanced__container}>
             <Image
-              source={require("../../../assets/icons/weather/humidity.png")}
+              source={require("../../../../assets/icons/weather/humidity.png")}
               style={[styles.icon__mini, { marginRight: 5 }]}
             />
             <Text style={styles.advanced__text}>
@@ -185,7 +185,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({
         <View style={styles.info__row}>
           <View style={[styles.advanced__container, { marginRight: 10 }]}>
             <Image
-              source={require("../../../assets/icons/weather/sunrise.png")}
+              source={require("../../../../assets/icons/weather/sunrise.png")}
               style={[styles.icon__mini, { marginRight: 5 }]}
             />
             <Text style={styles.advanced__text}>
@@ -194,7 +194,7 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({
           </View>
           <View style={styles.advanced__container}>
             <Image
-              source={require("../../../assets/icons/weather/sunset.png")}
+              source={require("../../../../assets/icons/weather/sunset.png")}
               style={[styles.icon__mini, { marginRight: 5 }]}
             />
             <Text style={styles.advanced__text}>
@@ -264,21 +264,21 @@ const Weather: React.FC = () => {
   };
 
   const weatherIcons: WeatherIcons = {
-    Clear: require("../../../assets/icons/weather/clear.png"),
-    Clouds: require("../../../assets/icons/weather/clouds.png"),
-    Drizzle: require("../../../assets/icons/weather/drizzle.png"),
-    Rain: require("../../../assets/icons/weather/rain.png"),
-    Thunderstorm: require("../../../assets/icons/weather/thunderstorm.png"),
-    Snow: require("../../../assets/icons/weather/snow.png"),
-    Mist: require("../../../assets/icons/weather/mist.png"),
-    Smoke: require("../../../assets/icons/weather/smoke.png"),
-    Haze: require("../../../assets/icons/weather/haze.png"),
-    Dust: require("../../../assets/icons/weather/dust.png"),
-    Fog: require("../../../assets/icons/weather/fog.png"),
-    Sand: require("../../../assets/icons/weather/sand.png"),
-    Ash: require("../../../assets/icons/weather/ash.png"),
-    Squall: require("../../../assets/icons/weather/squall.png"),
-    Tornado: require("../../../assets/icons/weather/tornado.png"),
+    Clear: require("../../../../assets/icons/weather/clear.png"),
+    Clouds: require("../../../../assets/icons/weather/clouds.png"),
+    Drizzle: require("../../../../assets/icons/weather/drizzle.png"),
+    Rain: require("../../../../assets/icons/weather/rain.png"),
+    Thunderstorm: require("../../../../assets/icons/weather/thunderstorm.png"),
+    Snow: require("../../../../assets/icons/weather/snow.png"),
+    Mist: require("../../../../assets/icons/weather/mist.png"),
+    Smoke: require("../../../../assets/icons/weather/smoke.png"),
+    Haze: require("../../../../assets/icons/weather/haze.png"),
+    Dust: require("../../../../assets/icons/weather/dust.png"),
+    Fog: require("../../../../assets/icons/weather/fog.png"),
+    Sand: require("../../../../assets/icons/weather/sand.png"),
+    Ash: require("../../../../assets/icons/weather/ash.png"),
+    Squall: require("../../../../assets/icons/weather/squall.png"),
+    Tornado: require("../../../../assets/icons/weather/tornado.png"),
   };
 
   const api = {
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 16,
     marginBottom: 20,
-    marginTop: Platform.OS === "android" ? 50 : 0,
+    marginTop: 50,
     backgroundColor: "#fff",
     padding: 12,
     borderRadius: 16,

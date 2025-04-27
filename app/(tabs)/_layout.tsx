@@ -32,13 +32,13 @@ export default function TabLayout() {
     checkLoginMethod();
   }, []);
 
-  if (isApiSignedIn === null) {
-    return null;
-  }
+  // if (isApiSignedIn === null) {
+  //   return null;
+  // }
 
-  if (!isSignedIn && !isApiSignedIn) {
-    return <Redirect href="/auth/login" />;
-  }
+  // if (!isSignedIn && !isApiSignedIn) {
+  //   return <Redirect href="/auth/login" />;
+  // }
   if (isSignedIn && user?.unsafeMetadata?.onboarding_completed !== true) {
     return <Redirect href="/auth/complete-your-account" />;
   }

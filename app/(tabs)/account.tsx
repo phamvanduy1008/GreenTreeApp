@@ -1,96 +1,192 @@
-import React from "react";
+import { useClerk } from "@clerk/clerk-expo"; 
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Image,
+  StatusBar,
 } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Colors } from "../constants/Colors";
+import { useRouter } from "expo-router";
+
+const PRIMARY_COLOR = Colors.primary;
+
+interface MenuItemProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  subtitle?: string;
+  onPress?: () => void; 
+}
 
 export default function AccountScreen() {
+  const { signOut, user } = useClerk();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        const userApi = await AsyncStorage.getItem("userData");
+        if (userApi || user) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error("Lỗi khi kiểm tra user:", error);
+        setIsAuthenticated(false);
+      }
+    };
+    checkAuthentication();
+  }, [user]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(); 
+      await AsyncStorage.clear(); 
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error("Lỗi khi đăng xuất:", error);
+    }
+  };
+  const toSignIn = () => {
+    router.push("/auth/login");
+  }
+  const toSignUp = () => {
+    router.push("/auth/register");
+  }
+
   return (
-    <View style={styles.container}>
-      <ScrollView>
-        {/* Profile Section */}
-        <View style={styles.profileContainer}>
-          <Image
-            source={require("../../assets/images/avatar.png")} //
-            style={styles.avatar}
-          />
-          <View style={styles.profileText}>
-            <View style={styles.nameContainer}>
-              <Text style={styles.name}>Afsar Hossen</Text>
-              <Icon
-                name="pencil"
-                size={16}
-                color="green"
-                style={styles.editIcon}
-              />
-            </View>
-            <Text style={styles.email}>lmshuvo97@gmail.com</Text>
-          </View>
-        </View>
-
-        {/* Menu Section */}
-        <View style={styles.menuContainer}>
-          <MenuItem icon="cart-outline" title="Đơn đặt hàng" />
-          <MenuItem icon="person-outline" title="Chi tiết đơn hàng" />
-          <MenuItem icon="location-outline" title="Địa chỉ giao hàng" />
-          <MenuItem icon="card-outline" title="Phương thức thanh toán" />
-          <MenuItem icon="pricetag-outline" title="Mã khuyến mãi" />
-          <MenuItem icon="notifications-outline" title="Thông báo" />
-          <MenuItem icon="help-circle-outline" title="Giúp đỡ" />
-          <MenuItem icon="information-circle-outline" title="Về" />
-        </View>
-
-        {/* Log out button */}
-        <TouchableOpacity style={styles.logoutButton}>
-          <View style={styles.logoutContent}>
-            <Icon
-              name="log-out-outline" // Icon từ Ionicons (tương tự)
-              size={20}
-              color="#00C897"
-              style={styles.logoutIcon}
+    <SafeAreaView style={styles.container}>
+    <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <ScrollView showsVerticalScrollIndicator={false}>
+      {isAuthenticated ? (
+        <View style={styles.profileSection}>
+          <View style={styles.profileHeader}>
+            <Image
+              source={{ uri: 'https://via.placeholder.com/150' }} 
+              style={styles.profileImage}
             />
-            <Text style={styles.logoutText}>Log Out</Text>
+            
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>DuyDuy</Text>
+            </View>
+            
+            <TouchableOpacity 
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Ionicons name="log-out-outline" size={20} color="#fff" />
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-      </ScrollView>
-    </View>
-  );
-}
-
-function MenuItem({ icon, title }: { icon: string; title: string }) {
-  return (
-    <TouchableOpacity style={styles.menuItem}>
-      <View style={styles.menuItemContent}>
-        <Icon name={icon} size={24} color="#333" />
-        <Text style={styles.menuItemText}>{title}</Text>
+        </View>
+      ) : (
+        <View style={styles.loginSection}>
+          <Text style={styles.welcomeText}>Chào mừng bạn!</Text>
+          
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity onPress={toSignIn} style={styles.loginButton}>
+              <Text style={styles.buttonText}>Đăng nhập</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity onPress={toSignUp} style={styles.signupButton}>
+              <Text style={styles.buttonText11}>Đăng ký</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+  
+      {/* Menu Section */}
+      <View style={styles.menuContainer}>
+        {isAuthenticated && (
+          <>
+            <Text style={styles.menuTitle}>Tài khoản</Text>
+  
+            <MenuItem 
+              icon="basket-outline" 
+              title="Đơn đặt hàng" 
+              subtitle="Xem và theo dõi đơn hàng của bạn" 
+              onPress={() => router.push("/page/account/acc/order")}
+            />
+  
+            <MenuItem 
+              icon="person-circle-outline" 
+              title="Thông tin tài khoản" 
+              subtitle="Cập nhật thông tin cá nhân" 
+              onPress={() => router.push("/page/account/acc/profile")}
+            />
+  
+            <MenuItem 
+              icon="map-outline" 
+              title="Địa chỉ giao hàng" 
+              subtitle="Quản lý địa chỉ nhận hàng" 
+              onPress={() => router.push("/page/account/acc/address")}
+            />
+  
+            <Text style={styles.menuTitle}>Tiện ích</Text>
+  
+            <MenuItem 
+              icon="pricetag-outline" 
+              title="Giá cả" 
+              subtitle="Kiểm tra bảng giá sản phẩm" 
+              onPress={() => router.push("/page/account/utility/price")}
+            />
+  
+            <MenuItem 
+              icon="calculator-sharp" 
+              title="Máy tính" 
+              subtitle="Công cụ tính toán đơn giản" 
+              onPress={() => router.push("/page/account/utility/calculator")}
+            />
+  
+            <MenuItem 
+              icon="cloudy-night-outline" 
+              title="Thời tiết" 
+              subtitle="Xem dự báo thời tiết hiện tại" 
+              onPress={() => router.push("/page/account/utility/weather")}
+            />
+  
+            <Text style={styles.menuTitle}>Hỗ trợ</Text>
+  
+            <MenuItem 
+              icon="help-circle-sharp" 
+              title="Giúp đỡ" 
+              subtitle="Các câu hỏi thường gặp" 
+              onPress={() => router.push("/page/account/support/help")}
+            />
+  
+            <MenuItem 
+              icon="chatbubble-ellipses-outline" 
+              title="Liên hệ" 
+              subtitle="Kết nối với đội ngũ hỗ trợ" 
+              onPress={() => router.push("/page/account/support/contact")}
+            />
+          </>
+        )}
       </View>
-      <Icon name="chevron-forward" size={20} color="#999" />
-    </TouchableOpacity>
+    </ScrollView>
+  </SafeAreaView>
+  
   );
 }
 
-function TabItem({
-  icon,
-  title,
-  active,
-}: {
-  icon: string;
-  title: string;
-  active: boolean;
-}) {
+function MenuItem({ icon, title, subtitle,onPress }: MenuItemProps) {
   return (
-    <TouchableOpacity style={styles.tabItem}>
-      <Icon name={icon} size={24} color={active ? "#00C897" : "#999"} />
-      <Text
-        style={[styles.tabItemText, { color: active ? "#00C897" : "#999" }]}
-      >
-        {title}
-      </Text>
+    <TouchableOpacity onPress={onPress} style={styles.menuItem}>
+      <View style={styles.menuIconContainer}>
+        <Ionicons name={icon} size={22} color={PRIMARY_COLOR} />
+      </View>
+      <View style={styles.menuContent}>
+        <Text style={styles.menuItemTitle}>{title}</Text>
+        {subtitle && <Text style={styles.menuItemSubtitle}>{subtitle}</Text>}
+      </View>
+      <Ionicons name="chevron-forward" size={18} color="#CCCCCC" />
     </TouchableOpacity>
   );
 }
@@ -98,107 +194,166 @@ function TabItem({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#FAFAFA",
+    paddingBottom:40,
+  },
+  
+  // Profile section when logged in
+  profileSection: {
     backgroundColor: "#fff",
-    paddingTop: 40,
+    borderRadius: 10,
+    marginHorizontal: 16,
+    marginTop: 20,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 1,
   },
-  scrollContainer: {
-    paddingBottom: 80,
-  },
-  profileContainer: {
+  profileHeader: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 25,
-    paddingTop: 30,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
-  avatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    borderWidth: 2,
-    borderColor: "#fff",
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#F5F5F5",
+    borderWidth: 1,
+    borderColor: "#F0F0F0",
   },
-  profileText: {
-    marginLeft: 20,
+  profileInfo: {
+    marginLeft: 16,
     flex: 1,
   },
-  nameContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  name: {
-    fontSize: 20,
-    fontWeight: "bold",
+  profileName: {
+    fontSize: 18,
+    fontWeight: "600",
     color: "#333",
   },
-  editIcon: {
-    marginLeft: 10,
+  logoutButton: {
+    backgroundColor: PRIMARY_COLOR,
+    borderRadius: 20,
+    width: 38,
+    height: 38,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  email: {
-    color: "#666",
-    marginTop: 5,
-    fontSize: 14,
+  
+  // Login section when not logged in
+  loginSection: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginHorizontal: 16,
+    marginTop: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 1,
+    alignItems: "center",
   },
-  menuContainer: {
-    marginTop: 5,
-    paddingHorizontal: 20,
-  },
-  sectionTitle: {
-    color: "#888",
-    fontSize: 12,
+  welcomeText: {
+    fontSize: 20,
     fontWeight: "600",
-    marginBottom: 10,
-    marginTop: 15,
-    letterSpacing: 0.5,
+    color: "#333",
+    marginBottom: 20,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
+  },
+  loginButton: {
+    backgroundColor: PRIMARY_COLOR,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    flex: 1,
+    marginRight: 10,
+    alignItems: "center",
+  },
+  signupButton: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: PRIMARY_COLOR,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    flex: 1,
+    marginLeft: 10,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  buttonText11: {
+    color: PRIMARY_COLOR,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  
+  // Menu section
+  menuContainer: {
+    marginTop: 20,
+    marginBottom: 40,
+    paddingHorizontal: 16,
+  },
+  menuTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#888",
+    marginTop: 24,
+    marginBottom: 12,
+    paddingLeft: 5, 
   },
   menuItem: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 16,
-    borderBottomColor: "#f0f0f0",
-    borderBottomWidth: 1,
+    backgroundColor: "#fff",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 1,
   },
-  menuItemContent: {
-    flexDirection: "row",
+  menuIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "rgba(83, 177, 117, 0.1)",
+    justifyContent: "center",
     alignItems: "center",
+    marginRight: 16,
   },
-  menuItemText: {
-    marginLeft: 15,
-    fontSize: 16,
-    color: "#444",
+  menuContent: {
+    flex: 1,
   },
-  logoutButton: {
-    marginHorizontal: 30,
-    marginVertical: 30,
-    paddingVertical: 20,
-    backgroundColor: "#F2F3F2",
-    borderRadius: 14,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#F5F5F5",
-  },
-  logoutContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  logoutIcon: {
-    marginRight: 8,
-  },
-  logoutText: {
-    color: "#00C897",
-    fontSize: 17,
+  menuItemTitle: {
+    fontSize: 15,
     fontWeight: "500",
+    color: "#333",
+    marginBottom: 2,
   },
-  tabItem: {
+  menuItemSubtitle: {
+    fontSize: 13,
+    color: "#888",
+  },
+  versionInfo: {
+    marginTop: 40,
     alignItems: "center",
-    paddingHorizontal: 5,
+    paddingBottom: 20,
   },
-  tabItemText: {
-    fontSize: 11,
-    marginTop: 4,
-    fontWeight: "500",
-  },
+  versionText: {
+    fontSize: 13,
+    color: "#888",
+  }
 });
