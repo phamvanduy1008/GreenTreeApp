@@ -8,6 +8,7 @@ import Input from "@/app/components/common/Input";
 import Button from "@/app/components/common/Button";
 import {useRouter } from "expo-router";
 import { ipAddress } from "../constants/ip";
+import { Colors } from "../constants/Colors";
 export const useWarmUpBrowser = () => {
   useEffect(() => {
     // Warm up the android browser to improve UX
@@ -20,6 +21,7 @@ export const useWarmUpBrowser = () => {
 };
 
 WebBrowser.maybeCompleteAuthSession();
+
 const Login = () => {
   const router = useRouter();
   const [email, setEmail] = useState(""); 
@@ -66,32 +68,30 @@ const Login = () => {
       ]}
     >
       <View style={styles.headingContainer}>
-      <Text style={styles.title}>Sign In</Text>
-      <Text style={styles.text}> Start your journey with thousands of developers around the world.</Text>
+        <Text style={styles.title}>Đăng Nhập</Text>
+        <Text style={styles.text}>Bắt đầu hành trình của bạn cùng sản phẩm của chúng tôi.</Text>
         <Input type="login" placeholder="Email" value={email} onChange={setEmail} inputStyles={{marginBottom:20} }></Input>
-      <Input type="password" placeholder="Password" value={password} onChange={setPassword} ></Input>
-     <TouchableOpacity onPress={()=>{}}>
-      <Text style={styles.forgetpass}>Forget Password?</Text>
-      </TouchableOpacity>
-    <Button onClick={handleLogin} buttonStyle={styles.btntologin}><Text style={styles.btnTextLogin}>Login</Text></Button>
-    <Text style={styles.textaccount}>
-      Don’t have account?{" "}
-      <Text style={styles.link} onPress={()=>{ router.push("/auth/register");
-}}>
-        Sign Up
-      </Text> 
-      </Text>
+        <Input type="password" placeholder="Mật khẩu" value={password} onChange={setPassword} ></Input>
+        <TouchableOpacity onPress={()=>{}}>
+          <Text style={styles.forgetpass}>Quên mật khẩu?</Text>
+        </TouchableOpacity>
+        <Button onClick={handleLogin} buttonStyle={styles.btntologin}><Text style={styles.btnTextLogin}>Đăng Nhập</Text></Button>
+        <Text style={styles.textaccount}>
+          Chưa có tài khoản?{" "}
+          <Text style={styles.link} onPress={()=>{ router.push("/auth/register");}}>
+            Đăng Ký
+          </Text> 
+        </Text>
       </View>
 
       <View style={styles.socialButtonsContainer}>
-      <SocialLoginButton strategy="facebook" />
+        <SocialLoginButton strategy="facebook" />
         <SocialLoginButton strategy="google" />
         <SocialLoginButton strategy="apple" />
       </View>
     </ScrollView>
   );
 };
-
 export default Login;
 
 const styles = StyleSheet.create({
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "700",
-    color:"rgb(42, 78, 202)",
+    color:Colors.primary,
     textAlign:"center",
     marginBottom:20,
   },
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   socialButtonsContainer: {
     width: "100%",
-    marginTop: 20,
+    marginTop: 60,
     gap: 10,
   },
   buttonlogin: {
@@ -192,10 +192,10 @@ const styles = StyleSheet.create({
     marginBottom:20,
   },
   link: {
-    color: "blue",
+    color: Colors.primary,
   },
   forgetpass:{
-    color:"#7C8BA0",
+    color: Colors.primary,
     fontSize:12,
     fontWeight:"500",
     marginTop:10,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   btntologin:{
     width:"98%",
     height:47,
-    backgroundColor:"#3461FD",
+    backgroundColor:Colors.primary,
     borderRadius:15,
     marginTop:20,
     color:"#fff",
