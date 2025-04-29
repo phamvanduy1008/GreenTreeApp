@@ -1,4 +1,4 @@
-import { useClerk } from "@clerk/clerk-expo"; 
+import { useClerk } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
@@ -21,7 +21,7 @@ interface MenuItemProps {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   subtitle?: string;
-  onPress?: () => void; 
+  onPress?: () => void;
 }
 
 export default function AccountScreen() {
@@ -48,8 +48,8 @@ export default function AccountScreen() {
 
   const handleLogout = async () => {
     try {
-      await signOut(); 
-      await AsyncStorage.clear(); 
+      await signOut();
+      await AsyncStorage.clear();
       setIsAuthenticated(false);
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error);
@@ -57,126 +57,127 @@ export default function AccountScreen() {
   };
   const toSignIn = () => {
     router.push("/auth/login");
-  }
+  };
   const toSignUp = () => {
     router.push("/auth/register");
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-    <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-    <ScrollView showsVerticalScrollIndicator={false}>
-      {isAuthenticated ? (
-        <View style={styles.profileSection}>
-          <View style={styles.profileHeader}>
-            <Image
-              source={{ uri: 'https://via.placeholder.com/150' }} 
-              style={styles.profileImage}
-            />
-            
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>DuyDuy</Text>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {isAuthenticated ? (
+          <View style={styles.profileSection}>
+            <View style={styles.profileHeader}>
+              <Image
+                source={{ uri: "https://via.placeholder.com/150" }}
+                style={styles.profileImage}
+              />
+
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName}>DuyDuy</Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.logoutButton}
+                onPress={handleLogout}
+              >
+                <Ionicons name="log-out-outline" size={20} color="#fff" />
+              </TouchableOpacity>
             </View>
-            
-            <TouchableOpacity 
-              style={styles.logoutButton}
-              onPress={handleLogout}
-            >
-              <Ionicons name="log-out-outline" size={20} color="#fff" />
-            </TouchableOpacity>
           </View>
-        </View>
-      ) : (
-        <View style={styles.loginSection}>
-          <Text style={styles.welcomeText}>Chào mừng bạn!</Text>
-          
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity onPress={toSignIn} style={styles.loginButton}>
-              <Text style={styles.buttonText}>Đăng nhập</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity onPress={toSignUp} style={styles.signupButton}>
-              <Text style={styles.buttonText11}>Đăng ký</Text>
-            </TouchableOpacity>
+        ) : (
+          <View style={styles.loginSection}>
+            <Text style={styles.welcomeText}>Chào mừng bạn!</Text>
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity onPress={toSignIn} style={styles.loginButton}>
+                <Text style={styles.buttonText}>Đăng nhập</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={toSignUp} style={styles.signupButton}>
+                <Text style={styles.buttonText11}>Đăng ký</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      )}
-  
-      {/* Menu Section */}
-      <View style={styles.menuContainer}>
-        {isAuthenticated && (
-          <>
-            <Text style={styles.menuTitle}>Tài khoản</Text>
-  
-            <MenuItem 
-              icon="basket-outline" 
-              title="Đơn đặt hàng" 
-              subtitle="Xem và theo dõi đơn hàng của bạn" 
-              onPress={() => router.push("/page/account/acc/order")}
-            />
-  
-            <MenuItem 
-              icon="person-circle-outline" 
-              title="Thông tin tài khoản" 
-              subtitle="Cập nhật thông tin cá nhân" 
-              onPress={() => router.push("/page/account/acc/profile")}
-            />
-  
-            <MenuItem 
-              icon="map-outline" 
-              title="Địa chỉ giao hàng" 
-              subtitle="Quản lý địa chỉ nhận hàng" 
-              onPress={() => router.push("/page/account/acc/address")}
-            />
-  
-            <Text style={styles.menuTitle}>Tiện ích</Text>
-  
-            <MenuItem 
-              icon="pricetag-outline" 
-              title="Giá cả" 
-              subtitle="Kiểm tra bảng giá sản phẩm" 
-              onPress={() => router.push("/page/account/utility/price")}
-            />
-  
-            <MenuItem 
-              icon="calculator-sharp" 
-              title="Máy tính" 
-              subtitle="Công cụ tính toán đơn giản" 
-              onPress={() => router.push("/page/account/utility/calculator")}
-            />
-  
-            <MenuItem 
-              icon="cloudy-night-outline" 
-              title="Thời tiết" 
-              subtitle="Xem dự báo thời tiết hiện tại" 
-              onPress={() => router.push("/page/account/utility/weather")}
-            />
-  
-            <Text style={styles.menuTitle}>Hỗ trợ</Text>
-  
-            <MenuItem 
-              icon="help-circle-sharp" 
-              title="Giúp đỡ" 
-              subtitle="Các câu hỏi thường gặp" 
-              onPress={() => router.push("/page/account/support/help")}
-            />
-  
-            <MenuItem 
-              icon="chatbubble-ellipses-outline" 
-              title="Liên hệ" 
-              subtitle="Kết nối với đội ngũ hỗ trợ" 
-              onPress={() => router.push("/page/account/support/contact")}
-            />
-          </>
         )}
-      </View>
-    </ScrollView>
-  </SafeAreaView>
-  
+
+        {/* Menu Section */}
+        <View style={styles.menuContainer}>
+          {isAuthenticated && (
+            <>
+              <Text style={styles.menuTitle}>Tài khoản</Text>
+
+              <MenuItem
+                icon="basket-outline"
+                title="Đơn đặt hàng"
+                subtitle="Xem và theo dõi đơn hàng của bạn"
+                onPress={() => router.push("../page/account/acc/order")}
+              />
+
+              <MenuItem
+                icon="person-circle-outline"
+                title="Thông tin tài khoản"
+                subtitle="Cập nhật thông tin cá nhân"
+                onPress={() => router.push("../page/account/acc/detailInfo")}
+              />
+
+              <MenuItem
+                icon="map-outline"
+                title="Địa chỉ giao hàng"
+                subtitle="Quản lý địa chỉ nhận hàng"
+                onPress={() => router.push("../page/account/acc/address")}
+              />
+
+              <Text style={styles.menuTitle}>Tiện ích</Text>
+
+              <MenuItem
+                icon="pricetag-outline"
+                title="Giá cả"
+                subtitle="Kiểm tra bảng giá sản phẩm"
+                onPress={() => router.push("../page/account/utility/price")}
+              />
+
+              <MenuItem
+                icon="calculator-sharp"
+                title="Máy tính"
+                subtitle="Công cụ tính toán đơn giản"
+                onPress={() =>
+                  router.push("../page/account/utility/calculator")
+                }
+              />
+
+              <MenuItem
+                icon="cloudy-night-outline"
+                title="Thời tiết"
+                subtitle="Xem dự báo thời tiết hiện tại"
+                onPress={() => router.push("../page/account/utility/weather")}
+              />
+
+              <Text style={styles.menuTitle}>Hỗ trợ</Text>
+
+              <MenuItem
+                icon="help-circle-sharp"
+                title="Giúp đỡ"
+                subtitle="Các câu hỏi thường gặp"
+                onPress={() => router.push("../page/account/support/help")}
+              />
+
+              <MenuItem
+                icon="chatbubble-ellipses-outline"
+                title="Liên hệ"
+                subtitle="Kết nối với đội ngũ hỗ trợ"
+                onPress={() => router.push("../page/account/support/contact")}
+              />
+            </>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-function MenuItem({ icon, title, subtitle,onPress }: MenuItemProps) {
+function MenuItem({ icon, title, subtitle, onPress }: MenuItemProps) {
   return (
     <TouchableOpacity onPress={onPress} style={styles.menuItem}>
       <View style={styles.menuIconContainer}>
@@ -195,9 +196,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FAFAFA",
-    paddingBottom:40,
+    paddingBottom: 40,
   },
-  
+
   // Profile section when logged in
   profileSection: {
     backgroundColor: "#fff",
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  
+
   // Login section when not logged in
   loginSection: {
     backgroundColor: "#fff",
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  
+
   // Menu section
   menuContainer: {
     marginTop: 20,
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     color: "#888",
     marginTop: 24,
     marginBottom: 12,
-    paddingLeft: 5, 
+    paddingLeft: 5,
   },
   menuItem: {
     flexDirection: "row",
@@ -355,5 +356,5 @@ const styles = StyleSheet.create({
   versionText: {
     fontSize: 13,
     color: "#888",
-  }
+  },
 });
