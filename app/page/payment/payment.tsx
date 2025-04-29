@@ -65,7 +65,9 @@ const Payment = () => {
   const [selectedCity, setSelectedCity] = useState<string>("Đà Nẵng");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("");
   const [selectedWard, setSelectedWard] = useState<string>("");
-  const [modalVisible, setModalVisible] = useState<"city" | "district" | "ward" | null>(null);
+  const [modalVisible, setModalVisible] = useState<
+    "city" | "district" | "ward" | null
+  >(null);
   const [model__items, setmodel__items] = useState<string[]>([]);
 
   const formatPrice = (price: number) => {
@@ -98,7 +100,10 @@ const Payment = () => {
           console.error("Không tìm thấy userData trong AsyncStorage");
         }
       } catch (error) {
-        console.error("Lỗi khi lấy thông tin người dùng từ AsyncStorage:", error);
+        console.error(
+          "Lỗi khi lấy thông tin người dùng từ AsyncStorage:",
+          error
+        );
       }
     };
     fetchUserData();
@@ -132,7 +137,13 @@ const Payment = () => {
 
   const saveUserData = async () => {
     if (!userData) return;
-    if (!editedFullName || !editedPhone || !editedStreet || !selectedWard || !selectedDistrict) {
+    if (
+      !editedFullName ||
+      !editedPhone ||
+      !editedStreet ||
+      !selectedWard ||
+      !selectedDistrict
+    ) {
       alert("Vui lòng điền đầy đủ thông tin");
       return;
     }
@@ -208,10 +219,24 @@ const Payment = () => {
       items = ["Đà Nẵng"];
     } else if (type === "district" && selectedCity && places[selectedCity]) {
       items = Object.keys(places[selectedCity]);
-    } else if (type === "ward" && selectedCity && selectedDistrict && places[selectedCity]?.[selectedDistrict]) {
+    } else if (
+      type === "ward" &&
+      selectedCity &&
+      selectedDistrict &&
+      places[selectedCity]?.[selectedDistrict]
+    ) {
       items = places[selectedCity][selectedDistrict];
     }
-    console.log("Opening modal for:", type, "Selected City:", selectedCity, "Selected District:", selectedDistrict, "Items:", items);
+    console.log(
+      "Opening modal for:",
+      type,
+      "Selected City:",
+      selectedCity,
+      "Selected District:",
+      selectedDistrict,
+      "Items:",
+      items
+    );
     setmodel__items(items);
     setModalVisible(type);
   };
@@ -266,9 +291,10 @@ const Payment = () => {
         <View style={styles.header__button} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scroll__content}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         {/* Address Section */}
         <View style={styles.section}>
           <View style={styles.section__header}>
@@ -311,7 +337,10 @@ const Payment = () => {
                   <Ionicons name="chevron-down" size={20} color="#333" />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.select__field, !selectedCity && styles.disabled]}
+                  style={[
+                    styles.select__field,
+                    !selectedCity && styles.disabled,
+                  ]}
                   onPress={() => openModal("district")}
                   disabled={!selectedCity}
                 >
@@ -321,7 +350,10 @@ const Payment = () => {
                   <Ionicons name="chevron-down" size={20} color="#333" />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.select__field, !selectedDistrict && styles.disabled]}
+                  style={[
+                    styles.select__field,
+                    !selectedDistrict && styles.disabled,
+                  ]}
                   onPress={() => openModal("ward")}
                   disabled={!selectedDistrict}
                 >
@@ -380,7 +412,9 @@ const Payment = () => {
             onPress={() => setPaymentMethod("cod")}
           >
             <Ionicons
-              name={paymentMethod === "cod" ? "radio-button-on" : "radio-button-off"}
+              name={
+                paymentMethod === "cod" ? "radio-button-on" : "radio-button-off"
+              }
               size={24}
               color={Colors.primary}
             />
@@ -391,7 +425,9 @@ const Payment = () => {
             onPress={() => setPaymentMethod("qr")}
           >
             <Ionicons
-              name={paymentMethod === "qr" ? "radio-button-on" : "radio-button-off"}
+              name={
+                paymentMethod === "qr" ? "radio-button-on" : "radio-button-off"
+              }
               size={24}
               color={Colors.primary}
             />
@@ -463,8 +499,52 @@ const Payment = () => {
 
       <TouchableOpacity
         style={styles.confirm__button}
-        onPress={() => {
-          console.log("Xác nhận thanh toán");
+        onPress={async () => {
+          if (!userData) {
+            alert("Không tìm thấy thông tin người dùng");
+            return;
+          }
+
+          try {
+            const orderData = {
+              userId: userData._id,
+              items: cartItems.map((item) => ({
+                productId: item.product._id,
+                quantity: item.quantity,
+                price: item.product.price,
+              })),
+              paymentMethod: paymentMethod,
+              name: userData.profile.full_name,
+              address: userData.profile.address,
+              phone: userData.profile.phone
+            };
+
+            const response = await fetch(`${ipAddress}/api/sellers`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(orderData),
+            });
+
+            if (response.ok) {
+              await Promise.all(
+                cartItems.map(async (item) => {
+                  await fetch(`${ipAddress}/api/user-cart/${item._id}`, {
+                    method: "DELETE",
+                  });
+                })
+              );
+
+              router.push("../../popup/success/success");
+            } else {
+              const errorData = await response.json();
+              alert(
+                errorData.message || "Đặt hàng thất bại. Vui lòng thử lại."
+              );
+            }
+          } catch (error) {
+            console.error("Lỗi khi đặt hàng:", error);
+            alert("Có lỗi xảy ra. Vui lòng thử lại.");
+          }
         }}
       >
         <Text style={styles.confirm__text}>
