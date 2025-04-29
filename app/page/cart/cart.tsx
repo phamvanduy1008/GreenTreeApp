@@ -192,7 +192,7 @@ const Cart = () => {
           />
         </TouchableOpacity>
       </View>
-      <Image source={{ uri: item.product.image }} style={styles.item__image} />
+      <Image source={{ uri: `${ipAddress}/${item.product.image}` }} style={styles.item__image} />
       <View style={styles.item__details}>
         <View style={styles.mid_column}>
           <Text style={styles.item__name}>
