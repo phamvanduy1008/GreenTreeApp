@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { ipAddress } from '@/app/constants/ip';
 type Product = {
   _id: string;
   name: string;
@@ -27,7 +28,7 @@ const ProductCard = ({ item }: { item: Product}) => {
   return (
     <TouchableOpacity style={styles.productCard} onPress={handlePress}>
       <Image
-        source={item.image ? { uri: item.image } : require('../../../assets/images/test.png')}
+        source={item.image ? { uri: `${ipAddress}/${item.image}` } : require('../../../assets/images/test.png')}
         style={styles.productImage}
       />
       <Text style={styles.productName}>{item.name}</Text>

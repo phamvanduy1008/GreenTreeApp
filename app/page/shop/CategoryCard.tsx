@@ -26,7 +26,7 @@ type Category = {
         <Image
           source={
             item.image
-              ? { uri: `${ipAddress}/images/${item.image}` }
+              ? { uri: `${ipAddress}/${item.image}` }
               : require("../../../assets/images/test.png")
           }
           style={styles.categoryImage}
