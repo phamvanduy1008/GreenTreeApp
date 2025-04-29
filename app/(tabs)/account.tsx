@@ -14,6 +14,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "../constants/Colors";
 import { useRouter } from "expo-router";
+import { ipAddress } from "../constants/ip";
+import { IUser } from "../types/types";
 
 const PRIMARY_COLOR = Colors.primary;
 
@@ -27,14 +29,20 @@ interface MenuItemProps {
 export default function AccountScreen() {
   const { signOut, user } = useClerk();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [accountUser , setAccountUser] = useState<IUser>();
   const router = useRouter();
 
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
         const userApi = await AsyncStorage.getItem("userData");
+        console.log("userApi", userApi);
+      
         if (userApi || user) {
           setIsAuthenticated(true);
+          if (userApi) {
+            setAccountUser(JSON.parse(userApi));
+          }
         } else {
           setIsAuthenticated(false);
         }
@@ -70,12 +78,12 @@ export default function AccountScreen() {
           <View style={styles.profileSection}>
             <View style={styles.profileHeader}>
               <Image
-                source={{ uri: "https://via.placeholder.com/150" }}
+                source={{ uri : `${ipAddress}/images/profile/${accountUser?.profile.avatar}`}}
                 style={styles.profileImage}
               />
 
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>DuyDuy</Text>
+                <Text style={styles.profileName}>{accountUser?.profile.full_name || user?.fullName}</Text>
               </View>
 
               <TouchableOpacity
