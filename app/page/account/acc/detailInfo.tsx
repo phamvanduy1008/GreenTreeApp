@@ -13,6 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useRouter } from "expo-router";
+import { ipAddress } from "@/app/constants/ip";
 
 // Định nghĩa kiểu cho các màn hình
 type RootStackParamList = {
@@ -73,7 +74,7 @@ export default function AccountSecurityScreen() {
 
         setIsLoggedIn(true);
         const response = await fetch(
-          `http://192.168.1.234:3000/api/user/${userId}`,
+          `${ipAddress}/api/user/${userId}`,
           {
             headers: {
               "Content-Type": "application/json",

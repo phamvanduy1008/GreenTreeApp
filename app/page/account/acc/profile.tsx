@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
+import { ipAddress } from "@/app/constants/ip";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -26,7 +27,7 @@ export default function ProfileScreen() {
     birthday: "",
     phone: "",
     email: "",
-    avatar: "", // Lưu tên ảnh (không phải đường dẫn đầy đủ)
+    avatar: "",
   });
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState("");
@@ -93,7 +94,7 @@ export default function ProfileScreen() {
       } as any);
 
       const response = await fetch(
-        `http://192.168.1.234:3000/api/user/${userId}/upload-avatar`,
+        `${ipAddress}/api/user/${userId}/upload-avatar`,
         {
           method: "POST",
           body: formData,
@@ -130,7 +131,7 @@ export default function ProfileScreen() {
         }
 
         const response = await fetch(
-          `http://192.168.1.234:3000/api/user/${userId}`,
+          `${ipAddress}/api/user/${userId}`,
           {
             method: "GET",
             headers: {
@@ -181,7 +182,7 @@ export default function ProfileScreen() {
       }
 
       const response = await fetch(
-        `http://192.168.1.234:3000/api/user/${userId}/update`,
+        `${ipAddress}/api/user/${userId}/update`,
         {
           method: "PUT",
           headers: {
@@ -237,7 +238,7 @@ export default function ProfileScreen() {
   // Hàm tạo URL đầy đủ từ tên ảnh
   const getAvatarUrl = (avatarName: string) => {
     if (!avatarName) return "";
-    return `http://192.168.1.234:3000/images/profile/${avatarName}`;
+    return `${ipAddress}/images/profile/${avatarName}`;
   };
 
   if (loading) {

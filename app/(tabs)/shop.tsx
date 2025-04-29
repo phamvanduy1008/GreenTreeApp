@@ -108,7 +108,7 @@ const ShopScreen: React.FC = () => {
   };
 
   const toSearch = () => {
-    router.push("../page/search/Search");
+    router.push("./search");
   };
 
   const renderProductRow = (data: Product[]) => {

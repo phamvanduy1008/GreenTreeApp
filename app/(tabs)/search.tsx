@@ -11,7 +11,7 @@ import {
   Animated,
   Image,
 } from 'react-native';
-import ProductCard from '../shop/ProductCard';
+import ProductCard from '../page/shop/ProductCard';
 import { Ionicons } from '@expo/vector-icons';
 import { ipAddress } from '@/app/constants/ip';
 
