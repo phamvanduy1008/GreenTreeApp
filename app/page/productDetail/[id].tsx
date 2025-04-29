@@ -123,7 +123,7 @@ const ProductDetail = () => {
 
           <View style={styles.areaImage}>
             <Image
-              source={product?.image ? { uri: product.image } : require('../../../assets/images/test.png')}
+              source={product?.image ? { uri: `${ipAddress}/${product.image}` } : require('../../../assets/images/test.png')}
               style={styles.imgPlant}
             />
           </View>

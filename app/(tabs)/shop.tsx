@@ -223,7 +223,7 @@ const ShopScreen: React.FC = () => {
                 >
                   <View style={styles.categoryImageWrapper}>
                     <Image
-                      source={{ uri: `${ipAddress}/images/${category.image}` }}
+                      source={{ uri: `${ipAddress}/${category.image}` }}
                       style={styles.categoryImage}
                     />
                   </View>
