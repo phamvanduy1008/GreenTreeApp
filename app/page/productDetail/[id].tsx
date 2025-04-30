@@ -4,6 +4,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ipAddress } from '@/app/constants/ip';
 import ProductCard from '../shop/ProductCard';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Products = {
   _id: string;
@@ -28,6 +29,7 @@ const ProductDetail = () => {
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [categoryName, setCategoryName] = useState<string>('Không xác định');
   const [heart, setHeart] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
 
 
   useEffect(() => {
@@ -70,8 +72,42 @@ const ProductDetail = () => {
   };
   
 
-  const handleAddToBasket = () => {
-    console.log('Đã thêm vào giỏ hàng:', product?.name, 'Số lượng:', quantity);
+  const handleAddToBasket = async () => {
+    if (!product) return;
+  
+    try {
+      const userData = await AsyncStorage.getItem("userData");
+      if (!userData) {
+        setError("Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.");
+        return;
+      }
+  
+      const user = JSON.parse(userData);
+      const userId = user._id;
+  
+      const response = await fetch(`${ipAddress}/api/cart`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          product: product._id,
+          user: userId,
+          quantity: quantity,
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Thêm vào giỏ hàng thất bại');
+      }
+  
+      
+    setShowPopup(true);
+    setTimeout(() => setShowPopup(false), 1500);;
+    } catch (error) {
+      console.error('Lỗi thêm vào giỏ hàng:', error);
+      setError('Lỗi khi thêm vào giỏ hàng');
+    }
   };
 
   const increaseQuantity = () => {
@@ -165,6 +201,14 @@ const ProductDetail = () => {
                 color="black"
               />
             </TouchableOpacity>
+            {showPopup && (
+          <View style={styles.popupContainer}>
+            <View style={styles.popupContent}>
+              <Text style={styles.popupIcon}>🛒</Text>
+              <Text style={styles.popupText}>Đã thêm vào giỏ hàng!</Text>
+            </View>
+          </View>
+        )}
             {isDescriptionOpen && (
               <Text style={styles.productDescription}>{product?.info || 'Không có mô tả'}</Text>
             )}
@@ -205,6 +249,7 @@ const ProductDetail = () => {
             <Text style={styles.addToBasketText}>Thêm vào giỏ hàng</Text>
           </TouchableOpacity>
         </View>
+
 
 
       </View>
@@ -331,6 +376,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
   },
+  popupContainer: {
+    position: 'absolute',
+    bottom: 100,
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  popupContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  popupIcon: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+  popupText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
