@@ -17,7 +17,7 @@ const Success = () => {
       <TouchableOpacity
         style={styles.trackButton}
         onPress={() => {
-        //   router.push("/tracking");
+          router.push("/page/account/acc/order");
         }}
       >
         <Text style={styles.buttonText}>Theo dõi đơn hàng</Text>

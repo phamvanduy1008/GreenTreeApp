@@ -21,13 +21,12 @@ type Product = {
   price: number;
   image?: string;
   info?: string;
+  quantity: number;
 };
 
 type Order = {
   _id: string;
-  product: Product;
-  quantity: number;
-  price: number;
+  products: Product[];
   status: string;
   orderCode: string;
   full_name?: string;
@@ -56,7 +55,28 @@ const OrderDetailScreen: React.FC = () => {
         throw new Error('Không thể tải thông tin đơn hàng');
       }
       const data = await res.json();
-      setOrder(data);
+      // Map the response to match the updated schema
+      const formattedOrder: Order = {
+        _id: data._id,
+        orderCode: data.orderCode,
+        status: data.status,
+        products: data.products.map((p: any) => ({
+          _id: p.product._id,
+          name: p.product.name,
+          price: p.price,
+          quantity: p.quantity,
+          image: p.product.image,
+          info: p.product.info,
+        })),
+        full_name: data.full_name,
+        phone: data.phone,
+        address: data.address,
+        paymentMethod: data.paymentMethod,
+        dateOrder: data.dateOrder,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      };
+      setOrder(formattedOrder);
       setLoading(false);
     } catch (err) {
       setError('Lỗi khi tải thông tin đơn hàng');
@@ -70,11 +90,11 @@ const OrderDetailScreen: React.FC = () => {
     }
   }, [id]);
 
-  const calculateShippingFee = (quantity: number) => {
-    if (quantity < 20) return 20000;
-    if (quantity < 30) return 30000;
-    if (quantity < 40) return 40000;
-    if (quantity < 50) return 50000;
+  const calculateShippingFee = (totalQuantity: number) => {
+    if (totalQuantity < 20) return 20000;
+    if (totalQuantity < 30) return 30000;
+    if (totalQuantity < 40) return 40000;
+    if (totalQuantity < 50) return 50000;
     return 60000;
   };
 
@@ -84,8 +104,6 @@ const OrderDetailScreen: React.FC = () => {
         return 'Chờ xác nhận';
       case 'processing':
         return 'Đang xử lý';
-      case 'shipping':
-        return 'Đang giao hàng';
       case 'delivered':
         return 'Đã giao hàng';
       case 'cancelled':
@@ -101,8 +119,6 @@ const OrderDetailScreen: React.FC = () => {
         return '#f5a623';
       case 'processing':
         return '#4a90e2';
-      case 'shipping':
-        return '#9013fe';
       case 'delivered':
         return '#7ed321';
       case 'cancelled':
@@ -154,8 +170,9 @@ const OrderDetailScreen: React.FC = () => {
     );
   }
 
-  const totalPrice = order.price * order.quantity;
-  const shippingFee = calculateShippingFee(order.quantity);
+  const totalQuantity = order.products.reduce((sum, p) => sum + p.quantity, 0);
+  const totalPrice = order.products.reduce((sum, p) => sum + p.price * p.quantity, 0);
+  const shippingFee = calculateShippingFee(totalQuantity);
   const grandTotal = totalPrice + shippingFee;
 
   return (
@@ -191,30 +208,40 @@ const OrderDetailScreen: React.FC = () => {
         {/* Product Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thông tin sản phẩm</Text>
-          <View style={styles.productContainer}>
-            <Image
-              source={{ 
-                uri: `${ipAddress}/${order.product.image}` 
-              }}
-              style={styles.productImage}
-            />
-            <View style={styles.productDetails}>
-              <Text style={styles.productName} numberOfLines={2}>
-                {order.product.name}
-              </Text>
-              <Text style={styles.productPrice}>
-                đ{order.price.toLocaleString()}
-              </Text>
-              <View style={styles.quantityContainer}>
-                <Text style={styles.quantityText}>Số lượng: </Text>
-                <Text style={styles.quantityValue}>x{order.quantity}</Text>
+          {order.products.map((product, index) => (
+            <View key={index} style={styles.productContainer}>
+              <Image
+                source={{
+                  uri: product.image
+                    ? `${ipAddress}/${product.image}`
+                    : `${ipAddress}/images/product/placeholder.png`
+                }}
+                style={styles.productImage}
+              />
+              <View style={styles.productDetails}>
+                <Text style={styles.productName} numberOfLines={2}>
+                  {product.name}
+                </Text>
+                <Text style={styles.productPrice}>
+                  đ{product.price.toLocaleString()}
+                </Text>
+                <View style={styles.quantityContainer}>
+                  <Text style={styles.quantityText}>Số lượng: </Text>
+                  <Text style={styles.quantityValue}>x{product.quantity}</Text>
+                </View>
               </View>
             </View>
-          </View>
-          {order.product.info && (
+          ))}
+          {order.products.some((p) => p.info) && (
             <View style={styles.productInfoContainer}>
               <Text style={styles.productInfoLabel}>Mô tả sản phẩm:</Text>
-              <Text style={styles.productInfoValue}>{order.product.info}</Text>
+              {order.products.map((product, index) => (
+                product.info && (
+                  <Text key={index} style={styles.productInfoValue}>
+                    {product.name}: {product.info}
+                  </Text>
+                )
+              ))}
             </View>
           )}
         </View>
