@@ -257,7 +257,7 @@ const Payment = () => {
 
   const renderItem = ({ item }: { item: CartItem }) => (
     <View style={styles.item__container}>
-      <Image source={{ uri: item.product.image }} style={styles.item__image} />
+      <Image source={{ uri: `${ipAddress}/${item.product.image}` }} style={styles.item__image} />
       <View style={styles.item__details}>
         <Text style={styles.item__name}>{item.product.name.toUpperCase()}</Text>
         <Text style={styles.item__quantity}>Số lượng: {item.quantity}</Text>
