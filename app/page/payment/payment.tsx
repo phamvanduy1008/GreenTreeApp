@@ -515,7 +515,9 @@ const Payment = () => {
               paymentMethod: paymentMethod,
               name: userData.profile.full_name,
               address: userData.profile.address,
-              phone: userData.profile.phone
+              phone: userData.profile.phone,
+              fee: shippingFee,
+              total_price: Number(totalPrice) + shippingFee,
             };
 
             const response = await fetch(`${ipAddress}/api/sellers`, {
