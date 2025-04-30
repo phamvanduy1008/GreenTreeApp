@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { ipAddress } from "@/app/constants/ip";
@@ -316,7 +315,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 15,
     marginHorizontal: 10,
-    marginTop: Platform.OS === "android" ? 50 : 0,
+    marginTop: 50,
     backgroundColor: "#FFFFFF",
     padding: 10,
     borderRadius: 16,
