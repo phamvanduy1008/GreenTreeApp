@@ -122,6 +122,12 @@ export default function AccountScreen() {
                 subtitle="Xem và theo dõi đơn hàng của bạn"
                 onPress={() => router.push("../page/account/acc/order")}
               />
+              <MenuItem
+                icon="heart-outline"
+                title="Sản phẩm yêu thích"
+                subtitle="Quản lý sản phẩm yêu thích"
+                onPress={() => router.push("../page/account/acc/address")}
+              />
 
               <MenuItem
                 icon="person-circle-outline"
@@ -136,6 +142,9 @@ export default function AccountScreen() {
                 subtitle="Quản lý địa chỉ nhận hàng"
                 onPress={() => router.push("../page/account/acc/address")}
               />
+              
+     </>
+            )}
 
               <Text style={styles.menuTitle}>Tiện ích</Text>
 
@@ -177,8 +186,8 @@ export default function AccountScreen() {
                 subtitle="Kết nối với đội ngũ hỗ trợ"
                 onPress={() => router.push("../page/account/support/contact")}
               />
-            </>
-          )}
+       
+    
         </View>
       </ScrollView>
     </SafeAreaView>

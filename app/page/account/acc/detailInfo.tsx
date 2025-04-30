@@ -177,7 +177,7 @@ export default function AccountSecurityScreen() {
       <View style={styles.menuContainer}>
         <MenuItem
           title="Hồ sơ của tôi"
-          onPress={() => handleNavigate("Profile")} // Sẽ điều hướng đến /page/acc/profile
+          onPress={() => handleNavigate("Profile")} // Sẽ điều hssướng đến /page/acc/profile
         />
         <MenuItem
           title="Tên người dùng"
