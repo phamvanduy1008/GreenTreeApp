@@ -8,11 +8,11 @@ import {
   TouchableOpacity,
   ImageBackground,
   Image,
-  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { Colors } from "../constants/Colors";
 import { ipAddress } from "../constants/ip";
+import Slider from "../components/common/Slider/slider";
 
 interface InforData {
   _id: string;
@@ -33,6 +33,21 @@ interface InforData {
     image: string;
   };
 }
+
+const images = [
+  {
+    url: require("../../assets/images/home/slider1.jpg"),
+    title: "Slider 1",
+  },
+  {
+    url: require("../../assets/images/home/slider2.jpg"),
+    title: "Slider 2",
+  },
+  {
+    url: require("../../assets/images/home/slider3.jpg"),
+    title: "Slider 3",
+  },
+];
 
 const Home: React.FC = () => {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
@@ -219,6 +234,7 @@ const Home: React.FC = () => {
           <View style={styles.header}>
             <Text style={styles.header__title}>Chăm sóc cây trồng</Text>
           </View>
+          <Slider images={images} />
           <View style={styles.content}>
             <View style={styles.section}>{renderCardViews()}</View>
           </View>
@@ -237,7 +253,7 @@ const styles = StyleSheet.create({
   scroll__content: {
     flexGrow: 1,
     paddingBottom: 150,
-    marginTop: Platform.OS === "android" ? 50 : 0,
+    marginTop: 50,
   },
   header: {
     width: "90%",
