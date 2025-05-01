@@ -31,7 +31,6 @@ const ProductDetail = () => {
   const [heart, setHeart] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
-
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
@@ -41,18 +40,17 @@ const ProductDetail = () => {
         }
         const data = await response.json();
         setProduct(data);
-        console.log("data1",data.category);
 
         if (data.category) {
           const categoryResponse = await fetch(`${ipAddress}/api/categories/${data.category}`);
           if (categoryResponse.ok) {
-            const data = await categoryResponse.json();
-            setCategoryName(data.name);
+            const categoryData = await categoryResponse.json();
+            setCategoryName(categoryData.name);
           }
           const resSimiler = await fetch(`${ipAddress}/api/products/category/${data.category}`);
           if (resSimiler.ok) {
-            const data = await resSimiler.json();
-            setProductSimiler(data);
+            const similerData = await resSimiler.json();
+            setProductSimiler(similerData);
           }
         }
       } catch (err) {
@@ -60,7 +58,33 @@ const ProductDetail = () => {
         console.error('Lỗi khi lấy thông tin sản phẩm:', err);
       }
     };
+
+    const checkIfFavorited = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('userData');
+        if (!userData) return;
+
+        const user = JSON.parse(userData);
+        const userId = user._id;
+
+        const response = await fetch(`${ipAddress}/api/favourites/${userId}`);
+        if (!response.ok) {
+          throw new Error('Không thể lấy danh sách yêu thích');
+        }
+
+        const favouriteData = await response.json();
+        if (favouriteData && favouriteData.products && favouriteData.products.includes(id)) {
+          setHeart(true);
+        } else {
+          setHeart(false);
+        }
+      } catch (err) {
+        console.error('Lỗi khi kiểm tra sản phẩm trong danh sách yêu thích:', err);
+      }
+    };
+
     fetchProductDetails();
+    checkIfFavorited();
   }, [id]);
 
   const handleGoBack = () => {
@@ -70,21 +94,20 @@ const ProductDetail = () => {
   const formatPrice = (price: number): string => {
     return `${price.toLocaleString('vi-VN')} Đ`;
   };
-  
 
   const handleAddToBasket = async () => {
     if (!product) return;
-  
+
     try {
-      const userData = await AsyncStorage.getItem("userData");
+      const userData = await AsyncStorage.getItem('userData');
       if (!userData) {
-        setError("Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.");
+        setError('Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.');
         return;
       }
-  
+
       const user = JSON.parse(userData);
       const userId = user._id;
-  
+
       const response = await fetch(`${ipAddress}/api/cart`, {
         method: 'POST',
         headers: {
@@ -96,17 +119,66 @@ const ProductDetail = () => {
           quantity: quantity,
         }),
       });
-  
+
       if (!response.ok) {
         throw new Error('Thêm vào giỏ hàng thất bại');
       }
-  
-      
-    setShowPopup(true);
-    setTimeout(() => setShowPopup(false), 1500);;
+
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 1500);
     } catch (error) {
       console.error('Lỗi thêm vào giỏ hàng:', error);
       setError('Lỗi khi thêm vào giỏ hàng');
+    }
+  };
+
+  const handleAddToFavourite = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('userData');
+      if (!userData) {
+        setError('Bạn cần đăng nhập để thêm sản phẩm vào danh sách yêu thích.');
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      const userId = user._id;
+      console.log("userId",userId);
+      console.log("id", id);
+      
+      if (!heart) {
+        const response = await fetch(`${ipAddress}/api/favourites`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user: userId,
+            product: id,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Không thể thêm sản phẩm vào danh sách yêu thích');
+        }
+
+        setHeart(true);
+      } else {
+        const response = await fetch(`${ipAddress}/api/favourites/${userId}/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Không thể xóa sản phẩm khỏi danh sách yêu thích');
+        }
+
+        setHeart(false);
+      }
+    } catch (error) {
+      console.error('Lỗi khi xử lý yêu thích:', error);
+      setError('Lỗi khi xử lý danh sách yêu thích');
     }
   };
 
@@ -119,10 +191,6 @@ const ProductDetail = () => {
       setQuantity(quantity - 1);
     }
   };
-  const handleAddToHeart = () => {
-    setHeart(!heart);
-
-  }
 
   const toggleDescription = () => {
     setIsDescriptionOpen(!isDescriptionOpen);
@@ -152,8 +220,8 @@ const ProductDetail = () => {
             <TouchableOpacity onPress={handleGoBack}>
               <Ionicons name="chevron-back" size={24} color="black" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleAddToHeart}>
-              <Ionicons name="heart-outline" size={24}  color={heart ? "red" : "black"} />
+            <TouchableOpacity onPress={handleAddToFavourite}>
+              <Ionicons name={heart ? "heart" : "heart-outline"} size={24} color={heart ? "red" : "black"} />
             </TouchableOpacity>
           </View>
 
@@ -177,8 +245,8 @@ const ProductDetail = () => {
               </Text>
             </View>
             <View style={styles.infoRow}>
-            <Text style={styles.infoText}>{categoryName}</Text>
-          </View>
+              <Text style={styles.infoText}>{categoryName}</Text>
+            </View>
 
             <View style={styles.quantityPriceRow}>
               <View style={styles.quantitySelector}>
@@ -190,28 +258,20 @@ const ProductDetail = () => {
                   <Ionicons name="add" size={24} color="green" />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.price}>{product?.price ? formatPrice(quantity*product.price) : '0 VNĐ'}</Text>
+              <Text style={styles.price}>{product?.price ? formatPrice(quantity * product.price) : '0 VNĐ'}</Text>
             </View>
-            <View style={styles.detail} >
-            <TouchableOpacity style={styles.detailDropdown} onPress={toggleDescription}>
-              <Text style={styles.sectionTitle}>Mô tả sản phẩm</Text>
-              <Ionicons
-                name={isDescriptionOpen ? 'chevron-up' : 'chevron-down'}
-                size={24}
-                color="black"
-              />
-            </TouchableOpacity>
-            {showPopup && (
-          <View style={styles.popupContainer}>
-            <View style={styles.popupContent}>
-              <Text style={styles.popupIcon}>🛒</Text>
-              <Text style={styles.popupText}>Đã thêm vào giỏ hàng!</Text>
-            </View>
-          </View>
-        )}
-            {isDescriptionOpen && (
-              <Text style={styles.productDescription}>{product?.info || 'Không có mô tả'}</Text>
-            )}
+            <View style={styles.detail}>
+              <TouchableOpacity style={styles.detailDropdown} onPress={toggleDescription}>
+                <Text style={styles.sectionTitle}>Mô tả sản phẩm</Text>
+                <Ionicons
+                  name={isDescriptionOpen ? 'chevron-up' : 'chevron-down'}
+                  size={24}
+                  color="black"
+                />
+              </TouchableOpacity>
+              {isDescriptionOpen && (
+                <Text style={styles.productDescription}>{product?.info || 'Không có mô tả'}</Text>
+              )}
             </View>
 
             {product?.evaluate && (
@@ -232,15 +292,14 @@ const ProductDetail = () => {
                 </View>
               </TouchableOpacity>
             )}
-              <View style={styles.productSimilerArea}>
-            <Text style={styles.sectionTitleSimiler}>Sản phẩm tương tự</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {productSimiler.map((item, index) => (
-                <ProductCard key={index} item={item}  />
-              ))}
-            </ScrollView>
-          </View>
-
+            <View style={styles.productSimilerArea}>
+              <Text style={styles.sectionTitleSimiler}>Sản phẩm tương tự</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {productSimiler.map((item, index) => (
+                  <ProductCard key={index} item={item} />
+                ))}
+              </ScrollView>
+            </View>
           </View>
         </ScrollView>
 
@@ -250,8 +309,14 @@ const ProductDetail = () => {
           </TouchableOpacity>
         </View>
 
-
-
+        {showPopup && (
+          <View style={styles.popupContainer}>
+            <View style={styles.popupContent}>
+              <Text style={styles.popupIcon}>🛒</Text>
+              <Text style={styles.popupText}>Đã thêm vào giỏ hàng!</Text>
+            </View>
+          </View>
+        )}
       </View>
     </>
   );

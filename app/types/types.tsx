@@ -74,7 +74,9 @@ export interface IAdmin {
    info: string;
    image: string;
    status: "available" | "out_of_stock";
+   description: string;
    evaluate: number;
+   sold : number;
    category:string;
    plant:string;
    createdAt?: Date;

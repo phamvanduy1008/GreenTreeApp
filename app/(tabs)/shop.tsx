@@ -47,6 +47,7 @@ const ShopScreen: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [productCate, setProductCate] = useState<Product[]>([]);
+  const [productSold, setProductSold] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState<string>("");
@@ -56,9 +57,10 @@ const ShopScreen: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [resCat, resProd] = await Promise.all([
+        const [resCat, resProd, resSold] = await Promise.all([
           fetch(`${ipAddress}/api/categories`),
           fetch(`${ipAddress}/api/products`),
+          fetch(`${ipAddress}/products/top-sold`),
         ]);
 
         if (!resCat.ok || !resProd.ok)
@@ -66,6 +68,9 @@ const ShopScreen: React.FC = () => {
 
         const catData: any[] = await resCat.json();
         const prodData: Product[] = await resProd.json();
+        const prodDataSold: Product[] = await resSold.json();
+
+        
 
         const categoriesWithColor: Category[] = catData.map((cat) => ({
           _id: cat._id,
@@ -76,6 +81,7 @@ const ShopScreen: React.FC = () => {
 
         setCategories(categoriesWithColor);
         setProducts(prodData);
+        setProductSold(prodDataSold);
       } catch (err) {
         console.error("Lỗi fetch dữ liệu:", err);
         setError("Không thể tải dữ liệu. Vui lòng thử lại sau.");
@@ -139,9 +145,9 @@ const ShopScreen: React.FC = () => {
     {
       type: "specialOffers",
       data: products.slice(0, 3),
-      title: "Ưu đãi đặc biệt",
+      title: "Sản phẩm đặc trưng",
     },
-    { type: "bestSellers", data: products, title: "Bán chạy nhất" },
+    { type: "bestSellers", data: productSold, title: "Bán chạy nhất" },
     { type: "allProducts", data: products, title: "Tất cả sản phẩm" },
   ];
 
@@ -202,9 +208,9 @@ const ShopScreen: React.FC = () => {
           <View>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{item.title}</Text>
-              <TouchableOpacity>
+              {/* <TouchableOpacity>
                 <Text style={styles.seeAll}>Xem tất cả</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
             <FlatList
               data={item.data as Category[]}

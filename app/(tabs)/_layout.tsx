@@ -45,6 +45,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
+    initialRouteName="shop" 
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
