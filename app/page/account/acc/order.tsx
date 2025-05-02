@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -14,7 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ipAddress } from '@/app/constants/ip';
 import { Colors } from '@/app/constants/Colors';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+
 
 type TabType = 'Chờ lấy hàng' | 'Chờ giao hàng' | 'Đã giao' | 'Đã hủy';
 
@@ -44,10 +44,26 @@ type Orders = {
   [key in TabType]: Order[];
 };
 
+const getStatusLabel = (statusParam: string | string[] | undefined): TabType => {
+  switch (statusParam) {
+    case 'pending':
+      return 'Chờ lấy hàng';
+    case 'processing':
+      return 'Chờ giao hàng';
+    case 'delivered':
+      return 'Đã giao';
+    case 'cancelled':
+      return 'Đã hủy';
+    default:
+      return 'Chờ lấy hàng';
+  }
+};
+
+
 type OrderNavigationProp = StackNavigationProp<RootStackParamList, 'Orders'>;
 
 const OrderInterface: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('Chờ lấy hàng');
+  
   const [cate, setCate] = useState<Orders>({
     'Chờ lấy hàng': [],
     'Chờ giao hàng': [],
@@ -57,10 +73,17 @@ const OrderInterface: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigation = useNavigation<OrderNavigationProp>();
-
   const tabs: TabType[] = ['Chờ lấy hàng', 'Chờ giao hàng', 'Đã giao', 'Đã hủy'];
 
+  const { status } = useLocalSearchParams();
+  const defaultTab = getStatusLabel(status);
+
+  const [activeTab, setActiveTab] = useState<TabType>(defaultTab ? defaultTab : 'Chờ lấy hàng');
+
+
   useEffect(() => {
+    console.log(status);
+    
     const fetchOrders = async () => {
       try {
         setLoading(true);
