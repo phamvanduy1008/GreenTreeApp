@@ -242,7 +242,7 @@ const Cart = () => {
           <Text style={styles.header__title}>Giỏ hàng</Text>
         </View>
         <TouchableOpacity
-          onPress={() => console.log("Message icon pressed")}
+          onPress={() => router.push("../message/message")}
           style={styles.message__button}
         >
           <Ionicons
