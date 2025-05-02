@@ -173,13 +173,15 @@ const OrderInterface: React.FC = () => {
     fetchOrders();
   }, []);
 
-  const handleCancelOrder = async (orderId: string) => {
+  const handleCancelOrder = async (orderId: string, orderCode : string) => {
+    console.log("orderCode:", orderCode);
+    
     try {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
         throw new Error('User ID không tìm thấy trong AsyncStorage');
       }
-
+  
       const response = await fetch(`${ipAddress}/api/orders/${orderId}/cancel`, {
         method: 'PATCH',
         headers: {
@@ -187,15 +189,32 @@ const OrderInterface: React.FC = () => {
         },
         body: JSON.stringify({ userId }),
       });
-
+  
       if (!response.ok) {
         throw new Error('Không thể hủy đơn hàng');
       }
-
+  
+      // ✅ Tạo thông báo vào DB
+      await fetch(`${ipAddress}/api/notices`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user: userId,
+          order: orderId,
+          title: "Đơn hàng đã bị hủy",
+          message: `Đơn hàng ${orderCode} đã được hủy thành công.`,
+          type: "cancelled",
+        }),
+      });
+  
+      // ✅ Lấy lại danh sách đơn hàng sau khi hủy
       const res = await fetch(`${ipAddress}/api/seller/${userId}`);
       if (!res.ok) {
         throw new Error('Không thể tải dữ liệu đơn hàng');
       }
+  
       const data = await res.json();
       const categorizedOrders: Orders = {
         'Chờ lấy hàng': (data.pending || []).map((order: any) => ({
@@ -255,13 +274,16 @@ const OrderInterface: React.FC = () => {
           status: order.status,
         })),
       };
+  
       setCate(categorizedOrders);
     } catch (err) {
+      console.error("Lỗi khi hủy đơn hàng:", err);
       setError('Lỗi khi hủy đơn hàng');
     }
   };
+  
 
-  const handleConfirmReceipt = async (orderId: string) => {
+  const handleConfirmReceipt = async (orderId: string , orderCode: string) => {
     try {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
@@ -279,6 +301,20 @@ const OrderInterface: React.FC = () => {
       if (!response.ok) {
         throw new Error('Không thể xác nhận nhận hàng');
       }
+
+       await fetch(`${ipAddress}/api/notices`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user: userId,
+          order: orderId,
+          title: "Đơn hàng đã giao thành công",
+          message: `Đơn hàng ${orderCode}  đã giao thành công.`,
+          type: "delivered",
+        }),
+      });
 
       const res = await fetch(`${ipAddress}/api/seller/${userId}`);
       if (!res.ok) {
@@ -503,7 +539,7 @@ const OrderInterface: React.FC = () => {
             {deliveryStatus.showActionButton && (
               <TouchableOpacity
                 style={styles.actionButton}
-                onPress={() => deliveryStatus.actionHandler(order._id)}
+                onPress={() => deliveryStatus.actionHandler(order._id ,order.orderCode )}
               >
                 <Text style={styles.actionButtonText}>{deliveryStatus.textBtn}</Text>
               </TouchableOpacity>

@@ -527,6 +527,21 @@ const Payment = () => {
             });
 
             if (response.ok) {
+              const seller = await response.json(); 
+              console.log("Seller response:", seller);
+              
+              await fetch(`${ipAddress}/api/notices`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  user: userData._id,
+                  order: seller.order._id,
+                  title: "Đơn hàng mới",
+                  message: `Đơn hàng ${seller.order.orderCode} đã được đặt thành công.`,
+                  type: "pending",
+                }),
+              });
+
               await Promise.all(
                 cartItems.map(async (item) => {
                   await fetch(`${ipAddress}/api/user-cart/${item._id}`, {
