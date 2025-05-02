@@ -63,25 +63,17 @@ const ProductDetail = () => {
       try {
         const userData = await AsyncStorage.getItem('userData');
         if (!userData) return;
-
-        const user = JSON.parse(userData);
-        const userId = user._id;
-
-        const response = await fetch(`${ipAddress}/api/favourites/${userId}`);
-        if (!response.ok) {
-          throw new Error('Không thể lấy danh sách yêu thích');
-        }
-
-        const favouriteData = await response.json();
-        if (favouriteData && favouriteData.products && favouriteData.products.includes(id)) {
-          setHeart(true);
-        } else {
-          setHeart(false);
-        }
+    
+        const { _id: userId } = JSON.parse(userData);
+        const response = await fetch(`${ipAddress}/api/favourites/${userId}/${id}`);
+        const { favorited } = await response.json();
+    
+        setHeart(favorited);
       } catch (err) {
         console.error('Lỗi khi kiểm tra sản phẩm trong danh sách yêu thích:', err);
+        setHeart(false);
       }
-    };
+    };    
 
     fetchProductDetails();
     checkIfFavorited();
@@ -163,7 +155,7 @@ const ProductDetail = () => {
 
         setHeart(true);
       } else {
-        const response = await fetch(`${ipAddress}/api/favourites/${userId}/${id}`, {
+        const response = await fetch(`${ipAddress}/api/favourites/delete/${userId}/${id}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',

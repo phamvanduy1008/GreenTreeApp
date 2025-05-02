@@ -122,3 +122,18 @@ export interface IAdmin {
    updatedAt?: Date;
  }
  
+ export interface INotice {
+  _id: string;
+  user: string;
+  order: {
+    _id: string;
+    orderCode: string;
+    status: string;
+  };
+  title: string;
+  message: string;
+  type: string;
+  isRead: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

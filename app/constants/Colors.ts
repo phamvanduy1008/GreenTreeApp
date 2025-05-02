@@ -18,5 +18,17 @@ export const Colors = {
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
   },
-  primary: 'rgb(83, 177, 117)',
+  // primary: 'rgb(83, 177, 117)',
+    primary: "#4CAF50",
+    primaryLight: "#E8F5E9",
+    primaryDark: "#388E3C",
+    white: "#FFFFFF",
+    background: "#F9F9F9",
+    text: "#263238",
+    textSecondary: "#546E7A",
+    textLight: "#78909C",
+    border: "#E0E0E0",
+    error: "#D32F2F",
+    success: "#388E3C",
+
 };
