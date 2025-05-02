@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   contentSection: {
     marginTop: 20,
     paddingHorizontal: 16,
-    marginBottom: 40,
+    marginBottom: 50,
   },
   contentTitle: {
     fontSize: 16,
