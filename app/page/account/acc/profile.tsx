@@ -130,15 +130,12 @@ export default function ProfileScreen() {
           return;
         }
 
-        const response = await fetch(
-          `${ipAddress}/api/user/${userId}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`${ipAddress}/api/user/${userId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
         if (!response.ok) {
           throw new Error("Lỗi khi lấy thông tin người dùng từ server");
@@ -181,24 +178,21 @@ export default function ProfileScreen() {
         return;
       }
 
-      const response = await fetch(
-        `${ipAddress}/api/user/${userId}/update`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
+      const response = await fetch(`${ipAddress}/api/user/${userId}/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          profile: {
+            full_name: profileData.name,
+            gender: profileData.gender,
+            birthday: parseDateToISO(profileData.birthday),
+            phone: profileData.phone,
           },
-          body: JSON.stringify({
-            profile: {
-              full_name: profileData.name,
-              gender: profileData.gender,
-              birthday: parseDateToISO(profileData.birthday),
-              phone: profileData.phone,
-            },
-            email: profileData.email,
-          }),
-        }
-      );
+          email: profileData.email,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("Lỗi khi cập nhật thông tin người dùng");
