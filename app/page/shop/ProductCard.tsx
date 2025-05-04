@@ -33,6 +33,15 @@ const ProductCard = ({ item }: { item: Product }) => {
   };
 
   const handleAddPress = () => {
+    if (item.status === 'out_of_stock') {
+      setError('Sản phẩm đã hết hàng');
+      setShowPopup(true);
+      setTimeout(() => {
+        setShowPopup(false);
+        setError(null);
+      }, 1500);
+      return;
+    }
     setModalVisible(true);
   };
 
@@ -171,10 +180,10 @@ const ProductCard = ({ item }: { item: Product }) => {
         </View>
       </Modal>
 
-      {/* Success Popup */}
+      {/* Error/Success Popup */}
       {showPopup && (
-        <View style={styles.successPopup}>
-          <Text style={styles.successText}>Đã thêm vào giỏ hàng!</Text>
+        <View style={[styles.successPopup, error ? styles.errorPopup : null]}>
+          <Text style={styles.successText}>{error || 'Đã thêm vào giỏ hàng!'}</Text>
         </View>
       )}
     </View>
@@ -353,7 +362,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '50%',
     left: '50%',
-    transform: [{ translateX: -100 }, { translateY: -20 }], 
+    transform: [{ translateX: -100 }, { translateY: -20 }],
     backgroundColor: '#4CAF50',
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -363,7 +372,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 10,
-    zIndex: 1000, 
+    zIndex: 1000,
+  },
+  errorPopup: {
+    backgroundColor: '#D32F2F',
   },
   successText: {
     color: '#fff',

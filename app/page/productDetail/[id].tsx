@@ -74,20 +74,15 @@ const ProductDetail = () => {
         }
 
         const favouriteData = await response.json();
-        console.log( favouriteData &&
-          favouriteData.products &&
-          favouriteData.products.some((product :Products) => product._id === id));
-        
         if (
           favouriteData &&
           favouriteData.products &&
-          favouriteData.products.some((product :Products) => product._id === id)
+          favouriteData.products.some((product: Products) => product._id === id)
         ) {
           setHeart(true);
         } else {
           setHeart(false);
         }
-        
       } catch (err) {
         console.error('Lỗi khi kiểm tra sản phẩm trong danh sách yêu thích:', err);
       }
@@ -106,7 +101,7 @@ const ProductDetail = () => {
   };
 
   const handleAddToBasket = async () => {
-    if (!product) return;
+    if (!product || product.status === 'out_of_stock') return;
 
     try {
       const userData = await AsyncStorage.getItem('userData');
@@ -151,9 +146,7 @@ const ProductDetail = () => {
       }
       const user = JSON.parse(userData);
       const userId = user._id;
-      console.log("userId",userId);
-      console.log("id", id);
-      
+
       if (!heart) {
         const response = await fetch(`${ipAddress}/api/favourites`, {
           method: 'POST',
@@ -211,7 +204,6 @@ const ProductDetail = () => {
       params: { productId: id },
     });
   };
-
 
   if (error) {
     return (
@@ -292,7 +284,7 @@ const ProductDetail = () => {
             </View>
 
             {product?.evaluate && (
-              <TouchableOpacity  onPress={handleViewReviews} style={styles.section}>
+              <TouchableOpacity onPress={handleViewReviews} style={styles.section}>
                 <Text style={styles.sectionTitle}>Đánh giá</Text>
                 <View style={styles.sectionRight}>
                   <View style={styles.starRating}>
@@ -321,8 +313,17 @@ const ProductDetail = () => {
         </ScrollView>
 
         <View style={styles.fixedButtonContainer}>
-          <TouchableOpacity style={styles.addToBasketButton} onPress={handleAddToBasket}>
-            <Text style={styles.addToBasketText}>Thêm vào giỏ hàng</Text>
+          <TouchableOpacity
+            style={[
+              styles.addToBasketButton,
+              product?.status === 'out_of_stock' && styles.disabledButton,
+            ]}
+            onPress={handleAddToBasket}
+            disabled={product?.status === 'out_of_stock'}
+          >
+            <Text style={styles.addToBasketText}>
+              {product?.status === 'out_of_stock' ? 'Sản phẩm hết hàng' : 'Thêm vào giỏ hàng'}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -343,8 +344,8 @@ const styles = StyleSheet.create({
   productList: {
     paddingHorizontal: 15,
   },
-  productSimilerArea:{
-    paddingTop:20,
+  productSimilerArea: {
+    paddingTop: 20,
   },
   container: {
     flex: 1,
@@ -424,7 +425,6 @@ const styles = StyleSheet.create({
   quantitySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-
     borderRadius: 15,
     overflow: 'hidden',
   },
@@ -434,8 +434,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quantity: {
-    paddingHorizontal:18,
-    paddingVertical:14,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
     fontSize: 18,
     borderWidth: 1,
     borderColor: '#E2E2E2',
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#181725',
   },
-  detail:{
+  detail: {
     borderBottomWidth: 1,
     borderBottomColor: '#E2E2E2',
     borderTopWidth: 1,
@@ -490,14 +490,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#333',
   },
-  
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#181725',
-    marginBottom:5,
+    marginBottom: 5,
   },
-  sectionTitleSimiler:{
+  sectionTitleSimiler: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#181725',
@@ -530,14 +529,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 16,
-    backgroundColor: '#FFFFFF', 
-    paddingBottom:30,
+    backgroundColor: '#FFFFFF',
+    paddingBottom: 30,
   },
   addToBasketButton: {
     backgroundColor: '#53B175',
     borderRadius: 18,
     padding: 16,
     alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#B0B0B0', // Grey color for disabled state
   },
   addToBasketText: {
     color: 'white',
