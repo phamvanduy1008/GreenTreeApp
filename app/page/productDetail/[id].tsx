@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: '#B0B0B0', // Grey color for disabled state
+    backgroundColor: '#B0B0B0',
   },
   addToBasketText: {
     color: 'white',
