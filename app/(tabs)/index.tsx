@@ -164,57 +164,57 @@ const Home: React.FC = () => {
             onPress={() => toggleRowExpansion(data._id)}
             disabled={isExpanded}
           >
-             <View style={styles.card__wrapper}>
-            <ImageBackground
-              source={getImageForPlant(data.plant.name)}
-              style={styles.card__image}
-            >
-              {isExpanded && (
-                <>
-                  <View style={styles.card__row}>
-                    <TouchableOpacity
-                      style={styles.card__menu_item}
-                      onPress={() => handleEditPlant(data.plant._id)}
-                    >
-                      <Image
-                        source={require("../../assets/icons/home/plant.png")}
-                        style={styles.card__icon}
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.card__menu_item}
-                      onPress={() => handleEditWater(data.plant._id)}
-                    >
-                      <Image
-                        source={require("../../assets/icons/home/water.png")}
-                        style={styles.card__icon}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.card__row}>
-                    <TouchableOpacity
-                      style={styles.card__menu_item}
-                      onPress={() => handleEditPreservation(data.plant._id)}
-                    >
-                      <Image
-                        source={require("../../assets/icons/home/shield.png")}
-                        style={styles.card__icon}
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.card__menu_item}
-                      onPress={() => handleEditPackaging(data.plant._id)}
-                    >
-                      <Image
-                        source={require("../../assets/icons/home/package.png")}
-                        style={styles.card__icon}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </>
-              )}
-            </ImageBackground>
-              </View>
+            <View style={styles.card__wrapper}>
+              <ImageBackground
+                source={getImageForPlant(data.plant?.name || "")}
+                style={styles.card__image}
+              >
+                {isExpanded && (
+                  <>
+                    <View style={styles.card__row}>
+                      <TouchableOpacity
+                        style={styles.card__menu_item}
+                        onPress={() => handleEditPlant(data.plant._id)}
+                      >
+                        <Image
+                          source={require("../../assets/icons/home/plant.png")}
+                          style={styles.card__icon}
+                        />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.card__menu_item}
+                        onPress={() => handleEditWater(data.plant._id)}
+                      >
+                        <Image
+                          source={require("../../assets/icons/home/water.png")}
+                          style={styles.card__icon}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.card__row}>
+                      <TouchableOpacity
+                        style={styles.card__menu_item}
+                        onPress={() => handleEditPreservation(data.plant._id)}
+                      >
+                        <Image
+                          source={require("../../assets/icons/home/shield.png")}
+                          style={styles.card__icon}
+                        />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.card__menu_item}
+                        onPress={() => handleEditPackaging(data.plant._id)}
+                      >
+                        <Image
+                          source={require("../../assets/icons/home/package.png")}
+                          style={styles.card__icon}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                )}
+              </ImageBackground>
+            </View>
           </TouchableOpacity>
         );
       }
@@ -229,7 +229,10 @@ const Home: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView   showsVerticalScrollIndicator={false}  contentContainerStyle={styles.scroll__content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll__content}
+      >
         <View style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.header__title}>Chăm sóc cây trồng</Text>
@@ -280,7 +283,7 @@ const styles = StyleSheet.create({
   card__wrapper: {
     flex: 1,
     borderRadius: 15,
-    overflow: "hidden", 
+    overflow: "hidden",
   },
   content: {
     width: "100%",
@@ -296,7 +299,7 @@ const styles = StyleSheet.create({
   card__row_container: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom:15,
+    marginBottom: 15,
   },
 
   card: {
@@ -304,13 +307,13 @@ const styles = StyleSheet.create({
     height: 170,
     borderRadius: 15,
     backgroundColor: "#FFFFFF",
-      elevation: 3,
-      shadowColor: "#000",
+    elevation: 3,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
   },
-  
+
   card__expanded: {
     height: 170,
   },
