@@ -36,12 +36,22 @@ export default function AccountScreen() {
     const checkAuthentication = async () => {
       try {
         const userApi = await AsyncStorage.getItem("userData");
-        console.log("userApi", userApi);
-      
-        if (userApi || user) {
+  
+        if (user || userApi) {
           setIsAuthenticated(true);
+          
           if (userApi) {
             setAccountUser(JSON.parse(userApi));
+          } else if (user) {
+            const newUserData = {
+              profile: {
+                full_name: user.fullName,
+                avatar: user.imageUrl, 
+              },
+            };
+  
+            setAccountUser(newUserData as IUser);
+            await AsyncStorage.setItem("userData", JSON.stringify(newUserData));
           }
         } else {
           setIsAuthenticated(false);
@@ -51,18 +61,21 @@ export default function AccountScreen() {
         setIsAuthenticated(false);
       }
     };
+  
     checkAuthentication();
   }, [user]);
+  
 
   const handleLogout = async () => {
     try {
-      await signOut();
-      await AsyncStorage.clear();
+      await signOut(); 
+      await AsyncStorage.clear(); 
       setIsAuthenticated(false);
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error);
     }
   };
+  
   const toSignIn = () => {
     router.push("/auth/login");
   };
@@ -77,13 +90,18 @@ export default function AccountScreen() {
         {isAuthenticated ? (
           <View style={styles.profileSection}>
             <View style={styles.profileHeader}>
-              <Image
-                source={{ uri : `${ipAddress}/images/profile/${accountUser?.profile.avatar}`}}
-                style={styles.profileImage}
-              />
-
+            {accountUser?.profile?.avatar ? (
+           <Image
+            source={{ uri: `${ipAddress}/images/profile/${accountUser.profile.avatar}` }}
+            style={styles.profileImage}
+          />
+           ) : (
+             <Ionicons name="person-circle-outline" size={35} color="#ccc" />
+          )}
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>{accountUser?.profile.full_name || user?.fullName}</Text>
+              <Text style={styles.profileName}>
+            {accountUser?.profile?.full_name || user?.fullName || "Người dùng"}
+          </Text>
               </View>
 
               <TouchableOpacity
