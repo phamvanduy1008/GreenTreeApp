@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Image,
+  RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -14,7 +15,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ipAddress } from '@/app/constants/ip';
 import { Colors } from '@/app/constants/Colors';
 import { router, useLocalSearchParams } from 'expo-router';
-
 
 type TabType = 'Chờ lấy hàng' | 'Chờ giao hàng' | 'Đã giao' | 'Đã hủy';
 
@@ -59,11 +59,9 @@ const getStatusLabel = (statusParam: string | string[] | undefined): TabType => 
   }
 };
 
-
 type OrderNavigationProp = StackNavigationProp<RootStackParamList, 'Orders'>;
 
 const OrderInterface: React.FC = () => {
-  
   const [cate, setCate] = useState<Orders>({
     'Chờ lấy hàng': [],
     'Chờ giao hàng': [],
@@ -72,6 +70,7 @@ const OrderInterface: React.FC = () => {
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const navigation = useNavigation<OrderNavigationProp>();
   const tabs: TabType[] = ['Chờ lấy hàng', 'Chờ giao hàng', 'Đã giao', 'Đã hủy'];
 
@@ -80,142 +79,21 @@ const OrderInterface: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<TabType>(defaultTab ? defaultTab : 'Chờ lấy hàng');
 
-
-  useEffect(() => {
-    console.log(status);
-    
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const userId = await AsyncStorage.getItem('userId');
-
-        if (!userId) {
-          throw new Error('User ID không tìm thấy trong AsyncStorage');
-        }
-
-        const res = await fetch(`${ipAddress}/api/seller/${userId}`);
-        if (!res.ok) {
-          throw new Error('Không thể tải dữ liệu đơn hàng');
-        }
-        const data = await res.json();
-        console.log("data",data);
-        
-
-        const categorizedOrders: Orders = {
-          'Chờ lấy hàng': (data.pending || []).map((order: any) => ({
-            _id: order._id,
-            orderCode: order.orderCode,
-            products: order.products.map((p: any) => ({
-              _id: p.product._id,
-              name: p.product.name,
-              quantity: p.quantity,
-              price: p.price,
-              image: p.product.image,
-              info: p.product.info,
-            })),
-            dateOrder: order.dateOrder,
-            status: order.status,
-          })),
-          'Chờ giao hàng': (data.processing || []).map((order: any) => ({
-            _id: order._id,
-            orderCode: order.orderCode,
-            products: order.products.map((p: any) => ({
-              _id: p.product._id,
-              name: p.product.name,
-              quantity: p.quantity,
-              price: p.price,
-              image: p.product.image,
-              info: p.product.info,
-            })),
-            dateOrder: order.dateOrder,
-            status: order.status,
-          })),
-          'Đã giao': (data.delivered || []).map((order: any) => ({
-            _id: order._id,
-            orderCode: order.orderCode,
-            products: order.products.map((p: any) => ({
-              _id: p.product._id,
-              name: p.product.name,
-              quantity: p.quantity,
-              price: p.price,
-              image: p.product.image,
-              info: p.product.info,
-            })),
-            dateOrder: order.dateOrder,
-            status: order.status,
-          })),
-          'Đã hủy': (data.cancelled || []).map((order: any) => ({
-            _id: order._id,
-            orderCode: order.orderCode,
-            products: order.products.map((p: any) => ({
-              _id: p.product._id,
-              name: p.product.name,
-              quantity: p.quantity,
-              price: p.price,
-              image: p.product.image,
-              info: p.product.info,
-            })),
-            dateOrder: order.dateOrder,
-            status: order.status,
-          })),
-        };
-
-        setCate(categorizedOrders);
-        setLoading(false);
-      } catch (error) {
-        setError('Không thể tải đơn hàng');
-        setLoading(false);
-      }
-    };
-
-    fetchOrders();
-  }, []);
-
-  const handleCancelOrder = async (orderId: string, orderCode : string) => {
-    console.log("orderCode:", orderCode);
-    
+  const fetchOrders = async () => {
     try {
+      setError(null);
+
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
         throw new Error('User ID không tìm thấy trong AsyncStorage');
       }
-  
-      const response = await fetch(`${ipAddress}/api/orders/${orderId}/cancel`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId }),
-      });
-  
-      if (!response.ok) {
-        throw new Error('Không thể hủy đơn hàng');
-      }
-  
-      // ✅ Tạo thông báo vào DB
-      await fetch(`${ipAddress}/api/notices`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user: userId,
-          order: orderId,
-          title: "Đơn hàng đã bị hủy",
-          message: `Đơn hàng ${orderCode} đã được hủy thành công.`,
-          type: "cancelled",
-        }),
-      });
-  
-      // ✅ Lấy lại danh sách đơn hàng sau khi hủy
+
       const res = await fetch(`${ipAddress}/api/seller/${userId}`);
       if (!res.ok) {
         throw new Error('Không thể tải dữ liệu đơn hàng');
       }
-  
       const data = await res.json();
+
       const categorizedOrders: Orders = {
         'Chờ lấy hàng': (data.pending || []).map((order: any) => ({
           _id: order._id,
@@ -274,16 +152,66 @@ const OrderInterface: React.FC = () => {
           status: order.status,
         })),
       };
-  
+
       setCate(categorizedOrders);
+    } catch (error) {
+      setError('Không thể tải đơn hàng');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchOrders();
+  };
+
+  const handleCancelOrder = async (orderId: string, orderCode: string) => {
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      if (!userId) {
+        throw new Error('User ID không tìm thấy trong AsyncStorage');
+      }
+
+      const response = await fetch(`${ipAddress}/api/orders/${orderId}/cancel`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Không thể hủy đơn hàng');
+      }
+
+      await fetch(`${ipAddress}/api/notices`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user: userId,
+          order: orderId,
+          title: 'Đơn hàng đã bị hủy',
+          message: `Đơn hàng ${orderCode} đã được hủy thành công.`,
+          type: 'cancelled',
+        }),
+      });
+
+      await fetchOrders();
     } catch (err) {
-      console.error("Lỗi khi hủy đơn hàng:", err);
+      console.error('Lỗi khi hủy đơn hàng:', err);
       setError('Lỗi khi hủy đơn hàng');
     }
   };
-  
 
-  const handleConfirmReceipt = async (orderId: string , orderCode: string) => {
+  const handleConfirmReceipt = async (orderId: string, orderCode: string) => {
     try {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
@@ -302,84 +230,21 @@ const OrderInterface: React.FC = () => {
         throw new Error('Không thể xác nhận nhận hàng');
       }
 
-       await fetch(`${ipAddress}/api/notices`, {
-        method: "POST",
+      await fetch(`${ipAddress}/api/notices`, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           user: userId,
           order: orderId,
-          title: "Đơn hàng đã giao thành công",
-          message: `Đơn hàng ${orderCode}  đã giao thành công.`,
-          type: "delivered",
+          title: 'Đơn hàng đã giao thành công',
+          message: `Đơn hàng ${orderCode} đã giao thành công.`,
+          type: 'delivered',
         }),
       });
 
-      const res = await fetch(`${ipAddress}/api/seller/${userId}`);
-      if (!res.ok) {
-        throw new Error('Không thể tải dữ liệu đơn hàng');
-      }
-      const data = await res.json();
-      const categorizedOrders: Orders = {
-        'Chờ lấy hàng': (data.pending || []).map((order: any) => ({
-          _id: order._id,
-          orderCode: order.orderCode,
-          products: order.products.map((p: any) => ({
-            _id: p.product._id,
-            name: p.product.name,
-            quantity: p.quantity,
-            price: p.price,
-            image: p.product.image,
-            info: p.product.info,
-          })),
-          dateOrder: order.dateOrder,
-          status: order.status,
-        })),
-        'Chờ giao hàng': (data.processing || []).map((order: any) => ({
-          _id: order._id,
-          orderCode: order.orderCode,
-          products: order.products.map((p: any) => ({
-            _id: p.product._id,
-            name: p.product.name,
-            quantity: p.quantity,
-            price: p.price,
-            image: p.product.image,
-            info: p.product.info,
-          })),
-          dateOrder: order.dateOrder,
-          status: order.status,
-        })),
-        'Đã giao': (data.delivered || []).map((order: any) => ({
-          _id: order._id,
-          orderCode: order.orderCode,
-          products: order.products.map((p: any) => ({
-            _id: p.product._id,
-            name: p.product.name,
-            quantity: p.quantity,
-            price: p.price,
-            image: p.product.image,
-            info: p.product.info,
-          })),
-          dateOrder: order.dateOrder,
-          status: order.status,
-        })),
-        'Đã hủy': (data.cancelled || []).map((order: any) => ({
-          _id: order._id,
-          orderCode: order.orderCode,
-          products: order.products.map((p: any) => ({
-            _id: p.product._id,
-            name: p.product.name,
-            quantity: p.quantity,
-            price: p.price,
-            image: p.product.image,
-            info: p.product.info,
-          })),
-          dateOrder: order.dateOrder,
-          status: order.status,
-        })),
-      };
-      setCate(categorizedOrders);
+      await fetchOrders();
     } catch (err) {
       setError('Lỗi khi xác nhận nhận hàng');
     }
@@ -539,7 +404,7 @@ const OrderInterface: React.FC = () => {
             {deliveryStatus.showActionButton && (
               <TouchableOpacity
                 style={styles.actionButton}
-                onPress={() => deliveryStatus.actionHandler(order._id ,order.orderCode )}
+                onPress={() => deliveryStatus.actionHandler(order._id, order.orderCode)}
               >
                 <Text style={styles.actionButtonText}>{deliveryStatus.textBtn}</Text>
               </TouchableOpacity>
@@ -571,7 +436,19 @@ const OrderInterface: React.FC = () => {
 
       <TabNavigation />
 
-      <ScrollView style={styles.orderListContainer}>{renderOrderList(activeTab)}</ScrollView>
+      <ScrollView
+        style={styles.orderListContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
+      >
+        {renderOrderList(activeTab)}
+      </ScrollView>
     </View>
   );
 };
@@ -640,7 +517,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   orderListContainer: {
-    flex: 1,
+     flex: 1,
     padding: 10,
     backgroundColor: '#f8f8f8',
   },
