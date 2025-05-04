@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Platform,
   KeyboardAvoidingView,
+  StatusBar,
 } from "react-native";
 import { io, Socket } from "socket.io-client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -120,38 +121,40 @@ export default function UserChat() {
         timestamp: new Date().toISOString(),
       };
       socket.emit("sendMessage", newMessage);
-      setMessage(""); // Chỉ xóa nội dung input, không thêm tin nhắn lạc quan
+      setMessage("");
     }
   };
 
   const renderadmin__item = ({ item }: { item: Admin }) => (
     <TouchableOpacity
       style={[
-        styles.admin__item,
-        selectedAdmin === item._id && styles.item__selected,
+        styles.adminItem,
+        selectedAdmin === item._id && styles.selectedItem,
       ]}
       onPress={() => handleSelectAdmin(item._id)}
     >
       <View
         style={[
-          styles.item__container,
+          styles.adminItemContainer,
           {
             backgroundColor:
-              selectedAdmin === item._id ? Colors.primary : "#E0E0E0",
+              selectedAdmin === item._id ? Colors.primary : Colors.accent,
           },
         ]}
       >
-        <Ionicons
-          name="person-circle-outline"
-          size={24}
-          color={selectedAdmin === item._id ? "#FFFFFF" : "#666"}
-          style={styles.admin__icon}
-        />
+        <View style={styles.adminAvatarContainer}>
+          <Ionicons
+            name="person"
+            size={14}
+            color={selectedAdmin === item._id ? Colors.white : Colors.primary}
+          />
+        </View>
         <Text
           style={[
-            styles.admin__itemText,
-            selectedAdmin === item._id && styles.text__selected,
+            styles.adminItemText,
+            selectedAdmin === item._id && styles.selectedText,
           ]}
+          numberOfLines={1}
         >
           {item.name || item.email}
         </Text>
@@ -160,25 +163,34 @@ export default function UserChat() {
   );
 
   const renderMessageItem = ({ item }: { item: Message }) => {
-    const isuser__message = item.sender === `user:${userId}`;
+    const isUserMessage = item.sender === `user:${userId}`;
+    const formattedTime = new Date(item.timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
     return (
       <View
         style={[
-          styles.message__bubble,
-          isuser__message ? styles.user__message : styles.admin__message,
+          styles.messageBubble,
+          isUserMessage ? styles.userMessage : styles.adminMessage,
         ]}
       >
-        <Text style={styles.message__text}>{item.content}</Text>
+        <Text
+          style={[
+            styles.messageText,
+            isUserMessage ? styles.userMessageText : styles.adminMessageText,
+          ]}
+        >
+          {item.content}
+        </Text>
         <Text
           style={[
             styles.timestamp,
-            isuser__message ? styles.timestampUser : styles.timestampAdmin,
+            isUserMessage ? styles.timestampUser : styles.timestampAdmin,
           ]}
         >
-          {new Date(item.timestamp).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+          {formattedTime}
         </Text>
       </View>
     );
@@ -188,61 +200,73 @@ export default function UserChat() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
       {userId ? (
         <>
-          {/* Header */}
+          <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
           <View style={styles.header}>
-            <TouchableOpacity style={styles.header__button}>
-              <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+            <TouchableOpacity style={styles.backButton}>
+              <Ionicons name="chevron-back" size={22} color={Colors.primary} />
             </TouchableOpacity>
-            <Text style={styles.header__title}>Chat với Admin</Text>
-            <View style={styles.header__button} />
+            <View style={styles.headerCenter}>
+              <Text style={styles.headerTitle}>Chat với Admin</Text>
+            </View>
           </View>
 
-          {/* Admin Picker */}
-          <View style={styles.admin__picker}>
+          <View style={styles.adminPickerContainer}>
+            <Text style={styles.adminPickerLabel}>Chọn admin để chat:</Text>
             <FlatList
               data={admins}
               keyExtractor={(item) => item._id}
               horizontal
               showsHorizontalScrollIndicator={false}
               renderItem={renderadmin__item}
-              contentContainerStyle={styles.admin__list}
+              contentContainerStyle={styles.adminList}
             />
           </View>
 
-          {/* Chat Area */}
-          <View style={styles.chat__container}>
+          <View style={styles.chatContainer}>
             <FlatList
               ref={messagesEndRef}
               data={messages}
               keyExtractor={(_, index) => index.toString()}
               renderItem={renderMessageItem}
-              contentContainerStyle={styles.message__list}
+              contentContainerStyle={styles.messageList}
               showsVerticalScrollIndicator={false}
             />
           </View>
 
-          {/* Input Area */}
-          <View style={styles.input__container}>
+          <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
               value={message}
               onChangeText={setMessage}
-              placeholder="Nhập tin nhắn..."
-              placeholderTextColor="#999"
+              placeholder="Nhập tin nhắn của bạn..."
+              placeholderTextColor={Colors.lightText}
               multiline
+              maxLength={500}
             />
-            <TouchableOpacity style={styles.send__button} onPress={sendMessage}>
-              <Ionicons name="send" size={24} color="#FFFFFF" />
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                !message.trim() && styles.sendButtonDisabled,
+              ]}
+              onPress={sendMessage}
+              disabled={!message.trim()}
+            >
+              <Ionicons name="send" size={20} color={Colors.white} />
             </TouchableOpacity>
           </View>
         </>
       ) : (
-        <View style={styles.loading__container}>
-          <Text style={styles.loading__text}>
+        <View style={styles.loadingContainer}>
+          <Ionicons
+            name="chatbubble-ellipses-outline"
+            size={60}
+            color={Colors.primary}
+          />
+          <Text style={styles.loadingText}>
             Đang tải thông tin người dùng...
           </Text>
         </View>
@@ -254,159 +278,193 @@ export default function UserChat() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    height: "100%",
+    backgroundColor: Colors.white,
   },
   header: {
+    paddingTop: Platform.OS === "ios" ? 50 : StatusBar.currentHeight,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
-    marginHorizontal: 30,
-    marginTop: 50,
-    backgroundColor: "#FFFFFF",
-    padding: 10,
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  header__button: {
-    padding: 8,
-  },
-  header__title: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: Colors.primary,
-    letterSpacing: 0.5,
-  },
-  admin__picker: {
-    paddingBottom: 10,
-    paddingLeft: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Colors.white,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    borderBottomColor: Colors.border,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: Colors.accent,
+  },
+  headerCenter: {
+    flex: 1,
     alignItems: "center",
   },
-  admin__list: {
-    paddingVertical: 5,
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: Colors.text,
+    letterSpacing: 0.5,
+    marginRight:40
   },
-  admin__item: {
-    marginRight: 15,
+  adminPickerContainer: {
+    padding: 15,
+    backgroundColor: Colors.white,
+  },
+  adminPickerLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.text,
+    marginBottom: 10,
+    paddingLeft: 5,
+  },
+  adminList: {
+    paddingBottom: 5,
+  },
+  adminItem: {
+    marginRight: 12,
     borderRadius: 20,
     overflow: "hidden",
   },
-  item__container: {
+  adminItemContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
     paddingVertical: 8,
-    paddingHorizontal: 15,
+    paddingHorizontal: 14,
+    borderRadius: 20,
   },
-  admin__icon: {
+  adminAvatarContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 8,
   },
-  admin__itemText: {
-    fontSize: 16,
+  adminItemText: {
+    fontSize: 14,
     fontWeight: "500",
-    color: "#666",
+    color: Colors.text,
+    maxWidth: 100,
   },
-  text__selected: {
-    color: "#FFFFFF",
+  selectedText: {
+    color: Colors.white,
+    fontWeight: "600",
   },
-  item__selected: {
-    shadowColor: "#000",
+  selectedItem: {
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
-    elevation: 3,
+    elevation: 4,
   },
-  chat__container: {
+  chatContainer: {
     flex: 1,
+    backgroundColor: Colors.background,
     paddingHorizontal: 15,
-    backgroundColor: "#F5F7FA",
   },
-  message__list: {
-    paddingBottom: 10,
+  messageList: {
+    paddingVertical: 15,
   },
-  message__bubble: {
-    maxWidth: "75%",
-    padding: 12,
+  messageBubble: {
+    maxWidth: "80%",
+    padding: 14,
     borderRadius: 20,
-    marginVertical: 5,
+    marginVertical: 6,
+  },
+  userMessage: {
+    alignSelf: "flex-end",
+    backgroundColor: Colors.primary,
+    borderBottomRightRadius: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
   },
-  user__message: {
-    alignSelf: "flex-end",
-    backgroundColor: Colors.primary,
-  },
-  admin__message: {
+  adminMessage: {
     alignSelf: "flex-start",
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
+    backgroundColor: Colors.messageBackground,
+    borderBottomLeftRadius: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
+    elevation: 1,
   },
-  message__text: {
+  messageText: {
     fontSize: 16,
-    color: "#333",
-    fontWeight: "400",
+    lineHeight: 22,
+  },
+  userMessageText: {
+    color: Colors.white,
+  },
+  adminMessageText: {
+    color: Colors.text,
   },
   timestamp: {
-    fontSize: 12,
-    marginTop: 5,
+    fontSize: 11,
+    marginTop: 6,
     textAlign: "right",
   },
   timestampUser: {
-    color: "#FFFFFF",
+    color: "rgba(255, 255, 255, 0.8)",
   },
   timestampAdmin: {
-    color: "#999",
+    color: Colors.lightText,
   },
-  input__container: {
+  inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 15,
-    backgroundColor: "#FFFFFF",
+    padding: 12,
+    backgroundColor: Colors.white,
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    borderTopColor: Colors.border,
+    marginBottom: 20
   },
   input: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 25,
+    backgroundColor: Colors.background,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: Colors.border,
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     fontSize: 16,
-    color: "#333",
-    marginRight: 10,
+    color: Colors.text,
     maxHeight: 100,
+    marginLeft:10
   },
-  send__button: {
+  sendButton: {
     backgroundColor: Colors.primary,
-    borderRadius: 25,
-    padding: 10,
+    borderRadius: 24,
+    width: 42,
+    height: 42,
     justifyContent: "center",
     alignItems: "center",
+    marginLeft: 10,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  loading__container: {
+  sendButtonDisabled: {
+    backgroundColor: Colors.lightText,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: Colors.background,
   },
-  loading__text: {
+  loadingText: {
     fontSize: 16,
-    color: "#666",
+    color: Colors.text,
     fontWeight: "500",
+    marginTop: 20,
   },
 });

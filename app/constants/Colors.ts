@@ -27,8 +27,12 @@ export const Colors = {
     text: "#263238",
     textSecondary: "#546E7A",
     textLight: "#78909C",
-    border: "#E0E0E0",
     error: "#D32F2F",
     success: "#388E3C",
+    lightGreen: "#8BC34A",
+    accent: "#E8F5E9",
+    lightText: "#86A886",
+    border: "#D4E7D4",
+    messageBackground: "#ECFBEC",
 
 };
