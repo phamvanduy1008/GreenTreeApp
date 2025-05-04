@@ -14,6 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useRouter } from "expo-router";
 import { ipAddress } from "@/app/constants/ip";
+import { useUser, useAuth } from "@clerk/clerk-expo";
 
 // Định nghĩa kiểu cho các màn hình
 type RootStackParamList = {
@@ -53,8 +54,9 @@ interface ApiResponse {
 }
 
 export default function AccountSecurityScreen() {
-  const router = useRouter();
+  const { user, isSignedIn, isLoaded: isClerkLoaded } = useUser();
   const navigation = useNavigation<NavigationProp>();
+  const router = useRouter();
   const [userData, setUserData] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,46 +65,51 @@ export default function AccountSecurityScreen() {
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
-        const userId = await AsyncStorage.getItem("userId");
-        console.log("UserId lưu trong AsyncStorage:", userId);
-
-        if (!userId) {
-          setIsLoggedIn(false);
-          setLoading(false);
-          return;
-        }
-
-        setIsLoggedIn(true);
-        const response = await fetch(
-          `${ipAddress}/api/user/${userId}`,
-          {
+        const storedUserId = await AsyncStorage.getItem("userId");
+        console.log("storedUserId", storedUserId);
+        
+        if (storedUserId) {
+          setIsLoggedIn(true);
+          const response = await fetch(`${ipAddress}/api/user/${storedUserId}`, {
             headers: {
               "Content-Type": "application/json",
             },
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            setError(errorData.message || "Error fetching user data");
+            throw new Error(errorData.message);
           }
-        );
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.log("Error details:", errorData);
-          throw new Error(
-            `HTTP error! status: ${response.status}, message: ${
-              errorData.message || "Không có thông báo lỗi"
-            }`
-          );
-        }
+          const data: ApiResponse = await response.json();
+          if (data.success && data.user) {
+            setUserData(data.user);
+          } else {
+            setError(data.message || "Không thể lấy thông tin người dùng");
+          }
+        } else if (isClerkLoaded && isSignedIn && user?.primaryEmailAddress?.emailAddress) {
+          const email = user.primaryEmailAddress.emailAddress;
+          const resp = await fetch(`${ipAddress}/get-user-info`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
 
-        const data: ApiResponse = await response.json();
-
-        if (data.success && data.user) {
-          setUserData(data.user);
+          const data = await resp.json();
+          if (resp.ok) {
+            await AsyncStorage.setItem("userData", JSON.stringify(data));
+            await AsyncStorage.setItem("userId", JSON.stringify(data._id));
+            setUserData(data);
+            setIsLoggedIn(true);
+          } else {
+            setError("Unable to fetch Clerk user data");
+          }
         } else {
-          setError(data.message || "Không thể lấy thông tin người dùng");
+          setIsLoggedIn(false); 
         }
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Lỗi không xác định";
-        console.error("Lỗi khi fetch dữ liệu:", errorMessage);
+        const errorMessage = err instanceof Error ? err.message : "Lỗi không xác định";
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -110,20 +117,17 @@ export default function AccountSecurityScreen() {
     };
 
     checkLoginStatus();
-  }, []);
-
+  }, [isClerkLoaded, isSignedIn, user]);
   const handleGoBack = () => {
     navigation.goBack();
   };
 
-  // Sử dụng router.push để điều hướng theo đường dẫn của Expo Router
   const handleNavigate = (screen: keyof RootStackParamList) => {
     if (screen === "Profile") {
-      router.push("/page/account/acc/profile"); // Điều hướng đến profile.tsx
+      router.push("/page/account/acc/profile"); 
     } else if (screen === "Login") {
       router.push("/auth/login");
     } else {
-      // Các màn hình khác vẫn sử dụng navigation.navigate
       navigation.navigate(screen);
     }
   };
@@ -177,7 +181,7 @@ export default function AccountSecurityScreen() {
       <View style={styles.menuContainer}>
         <MenuItem
           title="Hồ sơ của tôi"
-          onPress={() => handleNavigate("Profile")} // Sẽ điều hssướng đến /page/acc/profile
+          onPress={() => handleNavigate("Profile")}
         />
         <MenuItem
           title="Tên người dùng"

@@ -11,38 +11,64 @@ import { useAuth, useUser } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import { FontFamily } from "../constants/FontFamily";
+import { ipAddress } from "../constants/ip";
 
 export default function TabLayout() {
-  const { user } = useUser();
+  const { user, isLoaded: isClerkLoaded } = useUser();
   const { isSignedIn } = useAuth();
+  const [authChecking, setAuthChecking] = useState(true);
+  const [apiUserData, setApiUserData] = useState<any>(null);
 
-  const [isApiSignedIn, setIsApiSignedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkLoginMethod = async () => {
-      try {
-        const emailApi = await AsyncStorage.getItem("email");
-        const emailClerk = user?.primaryEmailAddress?.emailAddress || "";
-        const storedEmail = emailApi || emailClerk;
-        setIsApiSignedIn(!!storedEmail);
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu từ AsyncStorage:", error);
+    const initAuth = async () => {
+
+      // const stored = await AsyncStorage.getItem("userData");
+      // if (stored) {
+      //   setApiUserData(JSON.parse(stored));
+      //   setAuthChecking(false);
+      //   return;
+      // }
+
+      if (isClerkLoaded && isSignedIn && user?.primaryEmailAddress?.emailAddress) {
+        try {
+          const email = user.primaryEmailAddress.emailAddress;
+          const resp = await fetch(`${ipAddress}/get-user-info`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          const data = await resp.json();
+          console.log("data", data._id);
+          
+          if (resp.ok) {
+            await AsyncStorage.setItem("userData", JSON.stringify(data));
+            await AsyncStorage.setItem("userId", data._id);
+            setApiUserData(data);
+          }
+        } catch (err) {
+          console.error("Fetch clerk user error:", err);
+        }
       }
+
+      setAuthChecking(false);
     };
-    checkLoginMethod();
-  }, []);
 
-  // if (isApiSignedIn === null) {
-  //   return null;
-  // }
+    initAuth();
+  }, [isClerkLoaded, isSignedIn, user]);
 
-  // if (!isSignedIn && !isApiSignedIn) {
+  if (authChecking) {
+    return null;
+  }
+
+  // if (!apiUserData && !isSignedIn) {
   //   return <Redirect href="/auth/login" />;
   // }
+
   if (isSignedIn && user?.unsafeMetadata?.onboarding_completed !== true) {
     return <Redirect href="/auth/complete-your-account" />;
   }
-
+  
   return (
     <Tabs
     initialRouteName="shop" 

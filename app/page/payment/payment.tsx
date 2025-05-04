@@ -77,6 +77,8 @@ const Payment = () => {
     const fetchUserData = async () => {
       try {
         const storedUserData = await AsyncStorage.getItem("userData");
+        console.log("stored", storedUserData);
+        
         if (storedUserData) {
           const parsedUserData = JSON.parse(storedUserData);
           setUserData(parsedUserData);
@@ -169,24 +171,24 @@ const Payment = () => {
       await AsyncStorage.setItem("userData", JSON.stringify(updatedUserData));
       setUserData(updatedUserData);
 
-      const response = await fetch(`${ipAddress}/api/users/${userData._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profile: {
-            full_name: editedFullName,
-            phone: editedPhone,
-            address: updatedAddress,
-          },
-        }),
-      });
+      // const response = await fetch(`${ipAddress}/api/users/${userData._id}`, {
+      //   method: "PUT",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({
+      //     profile: {
+      //       full_name: editedFullName,
+      //       phone: editedPhone,
+      //       address: updatedAddress,
+      //     },
+      //   }),
+      // });
 
-      if (response.ok) {
-        console.log("Cập nhật thông tin người dùng thành công");
-        setIsEditing(false);
-      } else {
-        console.error("Lỗi khi cập nhật thông tin người dùng qua API");
-      }
+      // if (response.ok) {
+      //   console.log("Cập nhật thông tin người dùng thành công");
+      //   setIsEditing(false);
+      // } else {
+      //   console.error("Lỗi khi cập nhật thông tin người dùng qua API");
+      // }
     } catch (error) {
       console.error("Lỗi khi lưu thông tin người dùng:", error);
     }
