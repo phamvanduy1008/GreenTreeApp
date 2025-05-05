@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "login-clerk",
-    "slug": "login-clerk",
+    "name": "GreenApp",
+    "slug": "GreenApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo.jpg",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

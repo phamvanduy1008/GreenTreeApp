@@ -198,7 +198,7 @@ export default function AccountSecurityScreen() {
           onPress={() => {}}
         />
         <MenuItem
-          title="Email nhận hóa đơn"
+          title="Email"
           value={
             userData?.email
               ? `${userData.email[0]}******${userData.email
@@ -208,8 +208,7 @@ export default function AccountSecurityScreen() {
           }
           onPress={() => {}}
         />
-        <MenuItem title="Mạng xã hội" onPress={() => {}} />
-        <MenuItem title="Đổi mật khẩu" onPress={() => {}} />
+        <MenuItem title="Đổi mật khẩu" onPress={() => {router.push("./changepass")}} />
       </View>
     </SafeAreaView>
   );

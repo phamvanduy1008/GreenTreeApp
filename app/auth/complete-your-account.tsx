@@ -50,18 +50,17 @@ const CompleteYourAccountScreen = () => {
           onboarding_completed: true,
         },
       });
-      await AsyncStorage.setItem(
-        "userData",
-        JSON.stringify({ full_name, username, gender })
-      );
-      
-      if(email){
-        await fetch(`${ipAddress}/update-infor`, {
+      if (email) {
+        const response = await fetch(`${ipAddress}/update-infor`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, full_name, username, gender }),
         });
-      }
+      
+        if (response.ok) {
+          await AsyncStorage.setItem("ok", "true");
+        }
+      }      
       
       await user?.reload();
       return router.push("/(tabs)");
