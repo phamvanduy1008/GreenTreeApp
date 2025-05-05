@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { ipAddress } from "@/app/constants/ip";
@@ -230,28 +231,20 @@ const Cart = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.header__button}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
-        </TouchableOpacity>
-        <View style={styles.title__container}>
-          <Text style={styles.header__title}>Giỏ hàng</Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => router.push("../message/message")}
-          style={styles.message__button}
-        >
-          <Ionicons
-            name="chatbubble-outline"
-            size={20}
-            color={Colors.primary}
-          />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.header}>
+    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+      <Ionicons name="chevron-back" size={24} color={Colors.text} />
+    </TouchableOpacity>
+    <View style={styles.headerCenter}>
+      <Text style={styles.headerTitle}>Giỏ hàng của bạn</Text>
+    </View>
+    <TouchableOpacity   onPress={() => router.push("../message/message")} style={styles.cartIcon}>
+      <Ionicons name="chatbubble-outline" size={20} color={Colors.white} />
+    </TouchableOpacity>
+  </View>
+
+    <View style={styles.main}>
+      
       {cartItems.length === 0 ? (
         <Text style={styles.empty}>Giỏ hàng của bạn trống.</Text>
       ) : (
@@ -300,6 +293,7 @@ const Cart = () => {
         <Text style={styles.checkout__price}>{formatPrice(totalPrice)} ₫</Text>
       </TouchableOpacity>
     </View>
+    </View>
   );
 };
 
@@ -307,33 +301,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
-    paddingHorizontal: 20,
+  },
+  main:{
+    flex: 1,
+    paddingHorizontal:15
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-    marginHorizontal: 10,
-    marginTop: 50,
-    backgroundColor: "#FFFFFF",
-    padding: 10,
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  header__button: {
+     paddingTop: 50,
+     flexDirection: "row",
+     justifyContent: "space-between",
+     alignItems: "center",
+     backgroundColor: Colors.white,
+     paddingVertical: 16,
+     paddingHorizontal: 20,
+     shadowColor: "#000",
+     shadowOffset: { width: 0, height: 1 },
+     shadowOpacity: 0.08,
+     shadowRadius: 2,
+     elevation: 3,
+     zIndex: 10,
+     marginBottom:10
+   },
+   backButton: {
+     padding: 6,
+     borderRadius: 20,
+     backgroundColor: Colors.background,
+   },
+   headerCenter: {
+     flex: 1,
+     alignItems: "center",
+   },
+   headerTitle: {
+     fontSize: 18,
+     fontWeight: "600",
+     color: Colors.text,
+     textAlign: "center",
+     letterSpacing: 0.3,
+   },
+   cartIcon: {
     padding: 8,
-  },
-  header__title: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: Colors.primary,
-    letterSpacing: 0.5,
-    marginRight: 8,
+    backgroundColor: Colors.primary,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
   title__container: {
     flexDirection: "row",

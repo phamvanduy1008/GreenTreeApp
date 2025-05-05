@@ -9,6 +9,8 @@ import {
   ScrollView,
   TextInput,
   Modal,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Colors } from "../../constants/Colors";
@@ -35,6 +37,7 @@ interface CartItem {
   product: Product;
   user: string;
 }
+
 
 interface UserData {
   _id: string;
@@ -77,8 +80,6 @@ const Payment = () => {
     const fetchUserData = async () => {
       try {
         const storedUserData = await AsyncStorage.getItem("userData");
-        console.log("stored", storedUserData);
-        
         if (storedUserData) {
           const parsedUserData = JSON.parse(storedUserData);
           setUserData(parsedUserData);
@@ -170,25 +171,7 @@ const Payment = () => {
 
       await AsyncStorage.setItem("userData", JSON.stringify(updatedUserData));
       setUserData(updatedUserData);
-
-      // const response = await fetch(`${ipAddress}/api/users/${userData._id}`, {
-      //   method: "PUT",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     profile: {
-      //       full_name: editedFullName,
-      //       phone: editedPhone,
-      //       address: updatedAddress,
-      //     },
-      //   }),
-      // });
-
-      // if (response.ok) {
-      //   console.log("Cập nhật thông tin người dùng thành công");
-      //   setIsEditing(false);
-      // } else {
-      //   console.error("Lỗi khi cập nhật thông tin người dùng qua API");
-      // }
+      setIsEditing(false);
     } catch (error) {
       console.error("Lỗi khi lưu thông tin người dùng:", error);
     }
@@ -228,16 +211,6 @@ const Payment = () => {
     ) {
       items = places[selectedCity][selectedDistrict];
     }
-    console.log(
-      "Opening modal for:",
-      type,
-      "Selected City:",
-      selectedCity,
-      "Selected District:",
-      selectedDistrict,
-      "Items:",
-      items
-    );
     setmodel__items(items);
     setModalVisible(type);
   };
@@ -257,12 +230,12 @@ const Payment = () => {
   };
 
   const renderItem = ({ item }: { item: CartItem }) => (
-    <View style={styles.item__container}>
-      <Image source={{ uri: `${ipAddress}/${item.product.image}` }} style={styles.item__image} />
-      <View style={styles.item__details}>
-        <Text style={styles.item__name}>{item.product.name.toUpperCase()}</Text>
-        <Text style={styles.item__quantity}>Số lượng: {item.quantity}</Text>
-        <Text style={styles.item__price}>
+    <View style={styles.itemContainer}>
+      <Image source={{ uri: `${ipAddress}/${item.product.image}` }} style={styles.itemImage} />
+      <View style={styles.itemDetails}>
+        <Text style={styles.itemName} numberOfLines={1}>{item.product.name.toUpperCase()}</Text>
+        <Text style={styles.itemQuantity}>Số lượng: {item.quantity}</Text>
+        <Text style={styles.itemPrice}>
           {formatPrice(item.product.price * item.quantity)} ₫
         </Text>
       </View>
@@ -271,42 +244,41 @@ const Payment = () => {
 
   const rendermodel__item = ({ item }: { item: string }) => (
     <TouchableOpacity
-      style={styles.model__item}
+      style={styles.modalItem}
       onPress={() => handleSelect(item)}
+      activeOpacity={0.7}
     >
-      <Text style={styles.item__text}>{item}</Text>
+      <Text style={styles.modalItemText}>{item}</Text>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.header__button}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
+        <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.header__title}>Thanh toán</Text>
-        <View style={styles.header__button} />
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Thanh toán</Text>
+        </View>
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.scroll__content}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Address Section */}
         <View style={styles.section}>
-          <View style={styles.section__header}>
-            <Text style={styles.section__title}>Thông tin địa chỉ</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Thông tin địa chỉ</Text>
             {!isEditing && (
-              <TouchableOpacity onPress={() => setIsEditing(true)}>
-                <Ionicons name="pencil" size={20} color={Colors.primary} />
+              <TouchableOpacity style={{marginTop:-17}} onPress={() => setIsEditing(true)} activeOpacity={0.7}>
+                <Ionicons name="pencil" size={18} color={Colors.primary} />
               </TouchableOpacity>
             )}
           </View>
-          <View style={styles.address__container}>
+          <View style={styles.addressContainer}>
             {isEditing ? (
               <>
                 <TextInput
@@ -314,12 +286,14 @@ const Payment = () => {
                   value={editedFullName}
                   onChangeText={setEditedFullName}
                   placeholder="Họ tên"
+                  placeholderTextColor={Colors.textLight}
                 />
                 <TextInput
                   style={styles.input}
                   value={editedPhone}
                   onChangeText={setEditedPhone}
                   placeholder="Số điện thoại"
+                  placeholderTextColor={Colors.textLight}
                   keyboardType="phone-pad"
                 />
                 <TextInput
@@ -327,67 +301,70 @@ const Payment = () => {
                   value={editedStreet}
                   onChangeText={setEditedStreet}
                   placeholder="Số nhà, tên đường"
+                  placeholderTextColor={Colors.textLight}
                 />
                 <TouchableOpacity
-                  style={styles.select__field}
+                  style={styles.selectField}
                   onPress={() => openModal("city")}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.select__text}>
+                  <Text style={styles.selectText}>
                     {selectedCity || "Chọn thành phố"}
                   </Text>
-                  <Ionicons name="chevron-down" size={20} color="#333" />
+                  <Ionicons name="chevron-down" size={18} color={Colors.text} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.select__field,
-                    !selectedCity && styles.disabled,
-                  ]}
+                  style={[styles.selectField, !selectedCity && styles.disabled]}
                   onPress={() => openModal("district")}
                   disabled={!selectedCity}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.select__text}>
+                  <Text style={styles.selectText}>
                     {selectedDistrict || "Chọn quận/huyện"}
                   </Text>
-                  <Ionicons name="chevron-down" size={20} color="#333" />
+                  <Ionicons name="chevron-down" size={18} color={Colors.text} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.select__field,
-                    !selectedDistrict && styles.disabled,
-                  ]}
+                  style={[styles.selectField, !selectedDistrict && styles.disabled]}
                   onPress={() => openModal("ward")}
                   disabled={!selectedDistrict}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.select__text}>
+                  <Text style={styles.selectText}>
                     {selectedWard || "Chọn phường/xã"}
                   </Text>
-                  <Ionicons name="chevron-down" size={20} color="#333" />
+                  <Ionicons name="chevron-down" size={18} color={Colors.text} />
                 </TouchableOpacity>
-                <View style={styles.button__container}>
+                <View style={styles.buttonContainer}>
                   <TouchableOpacity
-                    style={[styles.action__button, styles.save__button]}
+                    style={[styles.actionButton, styles.saveButton]}
                     onPress={saveUserData}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.button__text}>Lưu</Text>
+                    <Text style={styles.buttonText}>Lưu</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.action__button, styles.cancel__button]}
+                    style={[styles.actionButton, styles.cancelButton]}
                     onPress={cancelEditing}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.button__text}>Hủy</Text>
+                    <Text style={styles.buttonText}>Hủy</Text>
                   </TouchableOpacity>
                 </View>
               </>
             ) : (
               <>
-                <Text style={styles.address__text}>
-                  Họ tên: {userData?.profile.full_name || "Đang tải..."}
+                <Text style={styles.addressText}>
+                  <Text style={styles.addressLabel}>Họ tên: </Text>
+                  {userData?.profile.full_name || "Đang tải..."}
                 </Text>
-                <Text style={styles.address__text}>
-                  Địa chỉ: {userData?.profile.address || "Đang tải..."}
+                <Text style={styles.addressText}>
+                  <Text style={styles.addressLabel}>Địa chỉ: </Text>
+                  {userData?.profile.address || "Đang tải..."}
                 </Text>
-                <Text style={styles.address__text}>
-                  Số điện thoại: {userData?.profile.phone || "Đang tải..."}
+                <Text style={styles.addressText}>
+                  <Text style={styles.addressLabel}>Số điện thoại: </Text>
+                  {userData?.profile.phone || "Đang tải..."}
                 </Text>
               </>
             )}
@@ -396,43 +373,46 @@ const Payment = () => {
 
         {/* Product List Section */}
         <View style={styles.section}>
-          <Text style={styles.section__title}>Sản phẩm</Text>
+          <Text style={styles.sectionTitle}>Sản phẩm</Text>
           <FlatList
             data={cartItems}
             renderItem={renderItem}
             keyExtractor={(item) => item._id}
             scrollEnabled={false}
+            contentContainerStyle={styles.listContent}
           />
         </View>
 
         {/* Payment Method Section */}
         <View style={styles.section}>
-          <Text style={styles.section__title}>Phương thức thanh toán</Text>
+          <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
           <TouchableOpacity
-            style={styles.radio__container}
+            style={styles.radioContainer}
             onPress={() => setPaymentMethod("cod")}
+            activeOpacity={0.7}
           >
             <Ionicons
               name={
                 paymentMethod === "cod" ? "radio-button-on" : "radio-button-off"
               }
-              size={24}
+              size={20}
               color={Colors.primary}
             />
-            <Text style={styles.radio__text}>Thanh toán khi nhận hàng</Text>
+            <Text style={styles.radioText}>Thanh toán khi nhận hàng</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.radio__container}
+            style={styles.radioContainer}
             onPress={() => setPaymentMethod("qr")}
+            activeOpacity={0.7}
           >
             <Ionicons
               name={
                 paymentMethod === "qr" ? "radio-button-on" : "radio-button-off"
               }
-              size={24}
+              size={20}
               color={Colors.primary}
             />
-            <Text style={styles.radio__text}>Thanh toán qua QR code</Text>
+            <Text style={styles.radioText}>Thanh toán qua QR code</Text>
           </TouchableOpacity>
           {paymentMethod === "qr" && (
             <Image
@@ -444,24 +424,26 @@ const Payment = () => {
 
         {/* Payment Details Section */}
         <View style={styles.section}>
-          <Text style={styles.section__title}>Chi tiết thanh toán</Text>
-          <View style={styles.detail__row}>
-            <Text style={styles.detail__label}>Tổng tiền hàng</Text>
-            <Text style={styles.detail__value}>
-              {formatPrice(Number(totalPrice))} ₫
-            </Text>
-          </View>
-          <View style={styles.detail__row}>
-            <Text style={styles.detail__label}>Chi phí vận chuyển</Text>
-            <Text style={styles.detail__value}>
-              {formatPrice(shippingFee)} ₫
-            </Text>
-          </View>
-          <View style={styles.detail__row}>
-            <Text style={styles.detail__label}>Tổng thanh toán</Text>
-            <Text style={styles.detail__value}>
-              {formatPrice(Number(totalPrice) + shippingFee)} ₫
-            </Text>
+          <Text style={styles.sectionTitle}>Chi tiết thanh toán</Text>
+          <View style={styles.detailContainer}>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Tổng tiền hàng</Text>
+              <Text style={styles.detailValue}>
+                {formatPrice(Number(totalPrice))} ₫
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Chi phí vận chuyển</Text>
+              <Text style={styles.detailValue}>
+                {formatPrice(shippingFee)} ₫
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Tổng thanh toán</Text>
+              <Text style={styles.detailValue}>
+                {formatPrice(Number(totalPrice) + shippingFee)} ₫
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -470,12 +452,12 @@ const Payment = () => {
       <Modal
         visible={!!modalVisible}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setModalVisible(null)}
       >
-        <View style={styles.model__container}>
-          <View style={styles.model__content}>
-            <Text style={styles.model__title}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
               {modalVisible === "city"
                 ? "Chọn thành phố"
                 : modalVisible === "district"
@@ -486,20 +468,21 @@ const Payment = () => {
               data={model__items}
               renderItem={rendermodel__item}
               keyExtractor={(item) => item}
-              style={styles.model__list}
+              style={styles.modalList}
             />
             <TouchableOpacity
-              style={styles.close__button}
+              style={styles.closeButton}
               onPress={() => setModalVisible(null)}
+              activeOpacity={0.7}
             >
-              <Text style={styles.button__text}>Đóng</Text>
+              <Text style={styles.buttonText}>Đóng</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
       <TouchableOpacity
-        style={styles.confirm__button}
+        style={styles.confirmButton}
         onPress={async () => {
           if (!userData) {
             alert("Không tìm thấy thông tin người dùng");
@@ -530,8 +513,6 @@ const Payment = () => {
 
             if (response.ok) {
               const seller = await response.json(); 
-              console.log("Seller response:", seller);
-              
               await fetch(`${ipAddress}/api/notices`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -564,8 +545,9 @@ const Payment = () => {
             alert("Có lỗi xảy ra. Vui lòng thử lại.");
           }
         }}
+        activeOpacity={0.7}
       >
-        <Text style={styles.confirm__text}>
+        <Text style={styles.confirmText}>
           {paymentMethod === "cod" ? "Mua hàng" : "Xác nhận thanh toán"}
         </Text>
       </TouchableOpacity>
@@ -576,239 +558,279 @@ const Payment = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 20,
+    backgroundColor: Colors.background,
   },
   header: {
+    paddingTop: Platform.OS === "ios" ? 50 : StatusBar.currentHeight,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
-    marginHorizontal: 10,
-    marginTop: 50,
-    backgroundColor: "#FFFFFF",
-    padding: 10,
-    borderRadius: 16,
+    backgroundColor: Colors.white,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 3,
   },
-  header__button: {
+  headerButton: {
     padding: 8,
+    borderRadius: 20,
+    backgroundColor: Colors.background,
   },
-  header__title: {
-    fontSize: 20,
+  headerCenter: {
+    flex: 1,
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
     fontWeight: "600",
-    color: Colors.primary,
-    letterSpacing: 0.5,
+    color: Colors.text,
+    letterSpacing: 0.3,
+    marginRight: 40,
   },
-  scroll__content: {
-    paddingBottom: 100,
-    paddingHorizontal: 10,
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 120, 
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 24, 
   },
-  section__header: {
+  sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    paddingVertical: 12,
   },
-  section__title: {
+  sectionTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: Colors.primary,
-    marginBottom: 10,
+    fontWeight: "700",
+    color: Colors.text,
+    marginBottom:20
   },
-  address__container: {
-    padding: 10,
-    backgroundColor: "#FFFFFF",
+  addressContainer: {
+    backgroundColor: Colors.white,
     borderRadius: 16,
+    padding: 20, // Tăng padding để thoáng hơn
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  address__text: {
-    fontSize: 16,
-    color: "#333",
-    margin: 5,
+  addressText: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    marginBottom: 10,
+    lineHeight: 22,
+  },
+  addressLabel: {
+    fontWeight: "600",
+    color: Colors.text,
   },
   input: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: "#CCC",
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    fontSize: 16,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    fontSize: 15,
+    color: Colors.text,
+    height: 48, 
   },
-  select__field: {
+  selectField: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: "#CCC",
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    height: 48,
   },
-  select__text: {
-    fontSize: 16,
-    color: "#333",
+  selectText: {
+    fontSize: 15,
+    color: Colors.text,
   },
   disabled: {
-    backgroundColor: "#F0F0F0",
-    borderColor: "#DDD",
+    backgroundColor: Colors.background,
+    borderColor: Colors.border,
+    opacity: 0.5,
   },
-  button__container: {
+  buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 12,
   },
-  action__button: {
+  actionButton: {
     flex: 1,
-    padding: 10,
-    borderRadius: 5,
+    padding: 14,
+    borderRadius: 12,
     alignItems: "center",
-    marginHorizontal: 5,
+    marginHorizontal: 6,
   },
-  save__button: {
+  saveButton: {
     backgroundColor: Colors.primary,
   },
-  cancel__button: {
-    backgroundColor: "#666",
+  cancelButton: {
+    backgroundColor: Colors.textSecondary,
   },
-  button__text: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "bold",
+  buttonText: {
+    color: Colors.white,
+    fontSize: 15,
+    fontWeight: "600",
   },
-  model__container: {
+  modalContainer: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "flex-end", 
   },
-  model__content: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    width: "80%",
-    maxHeight: "80%",
+  modalContent: {
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "70%", 
     padding: 20,
+    paddingBottom: 40,
   },
-  model__title: {
+  modalTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: Colors.primary,
-    marginBottom: 10,
+    color: Colors.text,
+    marginBottom: 16,
   },
-  model__list: {
-    maxHeight: 300,
+  modalList: {
+    marginBottom: 16,
   },
-  model__item: {
-    padding: 15,
+  modalItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#EEE",
+    borderBottomColor: Colors.border,
   },
-  item__text: {
-    fontSize: 16,
-    color: "#333",
+  modalItemText: {
+    fontSize: 15,
+    color: Colors.text,
   },
-  close__button: {
-    marginTop: 10,
-    padding: 10,
+  closeButton: {
+    padding: 14,
     backgroundColor: Colors.primary,
-    borderRadius: 5,
+    borderRadius: 12,
     alignItems: "center",
   },
-  item__container: {
+  itemContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 10,
-    margin: 10,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Colors.white,
     borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  item__image: {
-    width: 60,
-    height: 60,
-    borderRadius: 10,
-    marginRight: 15,
+  itemImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    marginRight: 16,
   },
-  item__details: {
+  itemDetails: {
     flex: 1,
-    justifyContent: "center",
   },
-  item__name: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#333",
-    marginBottom: 5,
+  itemName: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.text,
+    marginBottom: 6,
   },
-  item__quantity: {
+  itemQuantity: {
     fontSize: 14,
-    color: "#666",
-    marginBottom: 5,
+    color: Colors.textSecondary,
+    marginBottom: 6,
   },
-  item__price: {
-    fontSize: 16,
-    fontWeight: "500",
+  itemPrice: {
+    fontSize: 15,
+    fontWeight: "600",
     color: Colors.primary,
   },
-  radio__container: {
+  radioContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  radio__text: {
-    fontSize: 16,
-    color: "#333",
-    marginLeft: 10,
+  radioText: {
+    fontSize: 15,
+    color: Colors.text,
+    marginLeft: 12,
   },
   qr: {
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
     alignSelf: "center",
-    marginTop: 10,
+    marginVertical: 16,
+    borderRadius: 12,
   },
-  detail__row: {
+  detailContainer: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
+    paddingVertical: 10,
   },
-  detail__label: {
-    fontSize: 16,
-    color: "#333",
+  detailLabel: {
+    fontSize: 15,
+    color: Colors.textSecondary,
   },
-  detail__value: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: Colors.primary,
+  detailValue: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.text,
   },
-  confirm__button: {
+  confirmButton: {
     position: "absolute",
-    bottom: 30,
+    bottom: 20,
     left: 20,
     right: 20,
     backgroundColor: Colors.primary,
-    paddingVertical: 20,
-    borderRadius: 20,
+    paddingVertical: 18,
+    borderRadius: 16,
     alignItems: "center",
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
   },
-  confirm__text: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
+  confirmText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  listContent: {
+    paddingVertical: 4,
   },
 });
 
