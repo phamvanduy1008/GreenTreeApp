@@ -13,61 +13,78 @@ import { useEffect, useState } from "react";
 import { FontFamily } from "../constants/FontFamily";
 import { ipAddress } from "../constants/ip";
 
-export default function TabLayout() {
-  const { user, isLoaded: isClerkLoaded } = useUser();
-  const { isSignedIn } = useAuth();
-  const [authChecking, setAuthChecking] = useState(true);
-  const [apiUserData, setApiUserData] = useState<any>(null);
-
-
-  useEffect(() => {
-    const initAuth = async () => {
-
-      // const stored = await AsyncStorage.getItem("userData");
-      // if (stored) {
-      //   setApiUserData(JSON.parse(stored));
-      //   setAuthChecking(false);
-      //   return;
-      // }
-
-      if (isClerkLoaded && isSignedIn && user?.primaryEmailAddress?.emailAddress) {
+  export default function TabLayout() {
+    const { user, isLoaded: isClerkLoaded } = useUser();
+    const { isSignedIn } = useAuth();
+    const [authChecking, setAuthChecking] = useState(true);
+    const [storageOk, setStorageOk] = useState(false);
+  
+    const checkStored = async () => {
+      try {
+        const stored = await AsyncStorage.getItem("ok");
+        setStorageOk(stored === "true");
+      } catch (err) {
+        console.error("Error checking AsyncStorage:", err);
+      }
+      setAuthChecking(false);
+    };
+  
+    useEffect(() => {
+      checkStored();
+    }, []);
+  
+    useEffect(() => {
+      const interval = setInterval(async () => {
+        const stored = await AsyncStorage.getItem("ok");
+        if (stored === "true" && !storageOk) {
+          setStorageOk(true);
+        }
+      }, 1000);
+  
+      return () => clearInterval(interval);
+    }, [storageOk]);
+  
+    useEffect(() => {
+      const initAuth = async () => {
+        if (!isClerkLoaded || !user || !storageOk) return;
+  
         try {
-          const email = user.primaryEmailAddress.emailAddress;
+          const email = user?.primaryEmailAddress?.emailAddress;
+          if (!email) {
+            console.error("No email found for user");
+            return;
+          }
+  
           const resp = await fetch(`${ipAddress}/get-user-info`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),
           });
+  
           const data = await resp.json();
-          console.log("data", data._id);
-          
+          console.log("Fetched user ID:", data._id);
+  
           if (resp.ok) {
             await AsyncStorage.setItem("userData", JSON.stringify(data));
             await AsyncStorage.setItem("userId", data._id);
-            setApiUserData(data);
+          } else {
+            console.error("API error:", data.message);
           }
         } catch (err) {
-          console.error("Fetch clerk user error:", err);
+          console.error("Fetch user error:", err);
         }
-      }
-
-      setAuthChecking(false);
-    };
-
-    initAuth();
-  }, [isClerkLoaded, isSignedIn, user]);
-
-  if (authChecking) {
-    return null;
-  }
-
-  // if (!apiUserData && !isSignedIn) {
-  //   return <Redirect href="/auth/login" />;
-  // }
-
-  if (isSignedIn && user?.unsafeMetadata?.onboarding_completed !== true) {
-    return <Redirect href="/auth/complete-your-account" />;
-  }
+      };
+  
+      initAuth();
+    }, [isClerkLoaded, user, storageOk]);
+  
+    if (authChecking) {
+      return null; 
+    }
+  
+    if (isSignedIn && user?.unsafeMetadata?.onboarding_completed !== true) {
+      return <Redirect href="/auth/complete-your-account" />;
+    }
   
   return (
     <Tabs
