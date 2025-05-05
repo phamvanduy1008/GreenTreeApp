@@ -29,27 +29,28 @@ interface MenuItemProps {
 export default function AccountScreen() {
   const { signOut, user } = useClerk();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [accountUser , setAccountUser] = useState<IUser>();
+  const [accountUser, setAccountUser] = useState<IUser>();
   const router = useRouter();
 
   useEffect(() => {
     const checkAuthentication = async () => {
       try {
         const userApi = await AsyncStorage.getItem("userData");
-  
-        if (user || userApi) {
+        console.log("userApi", userApi);
+
+        if (userApi || user) {
           setIsAuthenticated(true);
-          
+
           if (userApi) {
             setAccountUser(JSON.parse(userApi));
           } else if (user) {
             const newUserData = {
               profile: {
                 full_name: user.fullName,
-                avatar: user.imageUrl, 
+                avatar: user.imageUrl,
               },
             };
-  
+
             setAccountUser(newUserData as IUser);
             await AsyncStorage.setItem("userData", JSON.stringify(newUserData));
           }
@@ -61,21 +62,20 @@ export default function AccountScreen() {
         setIsAuthenticated(false);
       }
     };
-  
+
     checkAuthentication();
   }, [user]);
-  
 
   const handleLogout = async () => {
     try {
-      await signOut(); 
-      await AsyncStorage.clear(); 
+      await signOut();
+      await AsyncStorage.clear();
       setIsAuthenticated(false);
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error);
     }
   };
-  
+
   const toSignIn = () => {
     router.push("/auth/login");
   };
@@ -90,18 +90,17 @@ export default function AccountScreen() {
         {isAuthenticated ? (
           <View style={styles.profileSection}>
             <View style={styles.profileHeader}>
-            {accountUser?.profile?.avatar ? (
-           <Image
-            source={{ uri: `${ipAddress}/images/profile/${accountUser.profile.avatar}` }}
-            style={styles.profileImage}
-          />
-           ) : (
-             <Ionicons name="person-circle-outline" size={35} color="#ccc" />
-          )}
+              <Image
+                source={{
+                  uri: `${ipAddress}/images/profile/${accountUser?.profile.avatar}`,
+                }}
+                style={styles.profileImage}
+              />
+
               <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>
-            {accountUser?.profile?.full_name || user?.fullName || "Người dùng"}
-          </Text>
+                <Text style={styles.profileName}>
+                  {accountUser?.profile.full_name || user?.fullName}
+                </Text>
               </View>
 
               <TouchableOpacity
@@ -144,7 +143,9 @@ export default function AccountScreen() {
                 icon="heart-outline"
                 title="Sản phẩm yêu thích"
                 subtitle="Quản lý sản phẩm yêu thích"
-                onPress={() => router.push("../page/account/acc/address")}
+                onPress={() =>
+                  router.push("../page/favourite_product/favourite_item")
+                }
               />
 
               <MenuItem
@@ -160,52 +161,47 @@ export default function AccountScreen() {
                 subtitle="Quản lý địa chỉ nhận hàng"
                 onPress={() => router.push("../page/account/acc/address")}
               />
-              
-     </>
-            )}
+            </>
+          )}
 
-              <Text style={styles.menuTitle}>Tiện ích</Text>
+          <Text style={styles.menuTitle}>Tiện ích</Text>
 
-              <MenuItem
-                icon="pricetag-outline"
-                title="Giá cả"
-                subtitle="Kiểm tra bảng giá sản phẩm"
-                onPress={() => router.push("../page/account/utility/price")}
-              />
+          <MenuItem
+            icon="pricetag-outline"
+            title="Giá cả"
+            subtitle="Kiểm tra bảng giá sản phẩm"
+            onPress={() => router.push("../page/account/utility/price")}
+          />
 
-              <MenuItem
-                icon="calculator-sharp"
-                title="Máy tính"
-                subtitle="Công cụ tính toán đơn giản"
-                onPress={() =>
-                  router.push("../page/account/utility/calculator")
-                }
-              />
+          <MenuItem
+            icon="calculator-sharp"
+            title="Máy tính"
+            subtitle="Công cụ tính toán đơn giản"
+            onPress={() => router.push("../page/account/utility/calculator")}
+          />
 
-              <MenuItem
-                icon="cloudy-night-outline"
-                title="Thời tiết"
-                subtitle="Xem dự báo thời tiết hiện tại"
-                onPress={() => router.push("../page/account/utility/weather")}
-              />
+          <MenuItem
+            icon="cloudy-night-outline"
+            title="Thời tiết"
+            subtitle="Xem dự báo thời tiết hiện tại"
+            onPress={() => router.push("../page/account/utility/weather")}
+          />
 
-              <Text style={styles.menuTitle}>Hỗ trợ</Text>
+          <Text style={styles.menuTitle}>Hỗ trợ</Text>
 
-              <MenuItem
-                icon="help-circle-sharp"
-                title="Giúp đỡ"
-                subtitle="Các câu hỏi thường gặp"
-                onPress={() => router.push("../page/account/support/help")}
-              />
+          <MenuItem
+            icon="help-circle-sharp"
+            title="Giúp đỡ"
+            subtitle="Các câu hỏi thường gặp"
+            onPress={() => router.push("../page/account/support/help")}
+          />
 
-              <MenuItem
-                icon="chatbubble-ellipses-outline"
-                title="Liên hệ"
-                subtitle="Kết nối với đội ngũ hỗ trợ"
-                onPress={() => router.push("../page/account/support/contact")}
-              />
-       
-    
+          <MenuItem
+            icon="chatbubble-ellipses-outline"
+            title="Liên hệ"
+            subtitle="Kết nối với đội ngũ hỗ trợ"
+            onPress={() => router.push("../page/account/support/contact")}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
