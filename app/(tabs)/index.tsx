@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   scroll__content: {
     flexGrow: 1,
     paddingBottom: 150,
-    marginTop: 50,
+    marginTop: 5,
   },
   header: {
     width: "90%",
