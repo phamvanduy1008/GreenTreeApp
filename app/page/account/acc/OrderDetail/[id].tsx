@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -55,7 +56,6 @@ const OrderDetailScreen: React.FC = () => {
         throw new Error('Không thể tải thông tin đơn hàng');
       }
       const data = await res.json();
-      // Map the response to match the updated schema
       const formattedOrder: Order = {
         _id: data._id,
         orderCode: data.orderCode,
@@ -102,10 +102,12 @@ const OrderDetailScreen: React.FC = () => {
     switch (status) {
       case 'pending':
         return 'Chờ xác nhận';
+      case 'resolved':
+        return 'Chờ lấy hàng';
       case 'processing':
-        return 'Đang xử lý';
+        return 'Chờ giao hàng';
       case 'delivered':
-        return 'Đã giao hàng';
+        return 'Đã giao';
       case 'cancelled':
         return 'Đã hủy';
       default:
@@ -116,15 +118,17 @@ const OrderDetailScreen: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return '#f5a623';
+        return '#f5a623'; 
+      case 'resolved':
+        return '#9333ea'; 
       case 'processing':
-        return '#4a90e2';
+        return '#4a90e2'; 
       case 'delivered':
         return '#7ed321';
       case 'cancelled':
-        return '#e53935';
+        return '#e53935'; 
       default:
-        return '#999';
+        return '#999'; 
     }
   };
 

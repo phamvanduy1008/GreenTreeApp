@@ -15,6 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ipAddress } from "@/app/constants/ip";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/app/constants/Colors";
+import { router } from "expo-router";
 
 interface Message {
   sender: string;
@@ -206,7 +207,7 @@ export default function UserChat() {
         <>
           <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
           <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton}>
+            <TouchableOpacity onPress={()=>{router.back()}} style={styles.backButton}>
               <Ionicons name="chevron-back" size={22} color={Colors.primary} />
             </TouchableOpacity>
             <View style={styles.headerCenter}>
