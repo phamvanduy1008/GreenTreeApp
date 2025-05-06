@@ -84,19 +84,6 @@ const Payment = () => {
           setUserData(parsedUserData);
           setEditedFullName(parsedUserData.profile.full_name);
           setEditedPhone(parsedUserData.profile.phone);
-
-          const addressParts = parsedUserData.profile.address.split(", ");
-          if (addressParts.length === 4) {
-            setEditedStreet(addressParts[0]);
-            setSelectedWard(addressParts[1]);
-            setSelectedDistrict(addressParts[2]);
-            setSelectedCity(addressParts[3]);
-          } else {
-            setEditedStreet("");
-            setSelectedWard("");
-            setSelectedDistrict("");
-            setSelectedCity("Đà Nẵng");
-          }
         } else {
           console.error("Không tìm thấy userData trong AsyncStorage");
         }
@@ -152,85 +139,6 @@ const Payment = () => {
       },
     });
   };
-
-  const saveUserData = async () => {
-    if (!userData) return;
-    if (
-      !editedFullName ||
-      !editedPhone ||
-      !editedStreet ||
-      !selectedWard ||
-      !selectedDistrict
-    ) {
-      alert("Vui lòng điền đầy đủ thông tin");
-      return;
-    }
-    if (!/^\d{10}$/.test(editedPhone)) {
-      alert("Số điện thoại phải có 10 chữ số");
-      return;
-    }
-    if (!places[selectedCity]?.[selectedDistrict]?.includes(selectedWard)) {
-      alert("Địa chỉ không hợp lệ");
-      return;
-    }
-    try {
-      const updatedAddress = `${editedStreet}, ${selectedWard}, ${selectedDistrict}, ${selectedCity}`;
-      const updatedUserData = {
-        ...userData,
-        profile: {
-          ...userData.profile,
-          full_name: editedFullName,
-          phone: editedPhone,
-          address: updatedAddress,
-        },
-      };
-
-      await AsyncStorage.setItem("userData", JSON.stringify(updatedUserData));
-      setUserData(updatedUserData);
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Lỗi khi lưu thông tin người dùng:", error);
-    }
-  };
-
-  const cancelEditing = () => {
-    if (userData) {
-      setEditedFullName(userData.profile.full_name);
-      setEditedPhone(userData.profile.phone);
-      const addressParts = userData.profile.address.split(", ");
-      if (addressParts.length === 4) {
-        setEditedStreet(addressParts[0]);
-        setSelectedWard(addressParts[1]);
-        setSelectedDistrict(addressParts[2]);
-        setSelectedCity(addressParts[3]);
-      } else {
-        setEditedStreet("");
-        setSelectedWard("");
-        setSelectedDistrict("");
-        setSelectedCity("Đà Nẵng");
-      }
-    }
-    setIsEditing(false);
-  };
-
-  const openModal = (type: "city" | "district" | "ward") => {
-    let items: string[] = [];
-    if (type === "city") {
-      items = ["Đà Nẵng"];
-    } else if (type === "district" && selectedCity && places[selectedCity]) {
-      items = Object.keys(places[selectedCity]);
-    } else if (
-      type === "ward" &&
-      selectedCity &&
-      selectedDistrict &&
-      places[selectedCity]?.[selectedDistrict]
-    ) {
-      items = places[selectedCity][selectedDistrict];
-    }
-    setmodel__items(items);
-    setModalVisible(type);
-  };
-
   const handleSelect = (item: string) => {
     if (modalVisible === "city") {
       setSelectedCity(item);

@@ -38,6 +38,8 @@ import { ipAddress } from "../constants/ip";
         const stored = await AsyncStorage.getItem("ok");
         if (stored === "true" && !storageOk) {
           setStorageOk(true);
+          console.log(stored);
+          
         }
       }, 1000);
   
