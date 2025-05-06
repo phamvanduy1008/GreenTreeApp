@@ -38,7 +38,6 @@ interface CartItem {
   user: string;
 }
 
-
 interface UserData {
   _id: string;
   email: string;
@@ -137,6 +136,23 @@ const Payment = () => {
     }
   }, [selectedItems]);
 
+  const handleSelectAddress = () => {
+    router.push({
+      pathname: "../address/address_delivery",
+      params: {
+        fromPayment: "true",
+        selectedItems,
+        totalPrice,
+        fullName: editedFullName,
+        phone: editedPhone,
+        street: editedStreet,
+        ward: selectedWard,
+        district: selectedDistrict,
+        city: selectedCity,
+      },
+    });
+  };
+
   const saveUserData = async () => {
     if (!userData) return;
     if (
@@ -231,9 +247,14 @@ const Payment = () => {
 
   const renderItem = ({ item }: { item: CartItem }) => (
     <View style={styles.itemContainer}>
-      <Image source={{ uri: `${ipAddress}/${item.product.image}` }} style={styles.itemImage} />
+      <Image
+        source={{ uri: `${ipAddress}/${item.product.image}` }}
+        style={styles.itemImage}
+      />
       <View style={styles.itemDetails}>
-        <Text style={styles.itemName} numberOfLines={1}>{item.product.name.toUpperCase()}</Text>
+        <Text style={styles.itemName} numberOfLines={1}>
+          {item.product.name.toUpperCase()}
+        </Text>
         <Text style={styles.itemQuantity}>Số lượng: {item.quantity}</Text>
         <Text style={styles.itemPrice}>
           {formatPrice(item.product.price * item.quantity)} ₫
@@ -256,7 +277,10 @@ const Payment = () => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => router.back()}
+        >
           <Ionicons name="chevron-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
@@ -272,103 +296,25 @@ const Payment = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Thông tin địa chỉ</Text>
-            {!isEditing && (
-              <TouchableOpacity style={{marginTop:-17}} onPress={() => setIsEditing(true)} activeOpacity={0.7}>
-                <Ionicons name="pencil" size={18} color={Colors.primary} />
-              </TouchableOpacity>
-            )}
           </View>
-          <View style={styles.addressContainer}>
-            {isEditing ? (
-              <>
-                <TextInput
-                  style={styles.input}
-                  value={editedFullName}
-                  onChangeText={setEditedFullName}
-                  placeholder="Họ tên"
-                  placeholderTextColor={Colors.textLight}
-                />
-                <TextInput
-                  style={styles.input}
-                  value={editedPhone}
-                  onChangeText={setEditedPhone}
-                  placeholder="Số điện thoại"
-                  placeholderTextColor={Colors.textLight}
-                  keyboardType="phone-pad"
-                />
-                <TextInput
-                  style={styles.input}
-                  value={editedStreet}
-                  onChangeText={setEditedStreet}
-                  placeholder="Số nhà, tên đường"
-                  placeholderTextColor={Colors.textLight}
-                />
-                <TouchableOpacity
-                  style={styles.selectField}
-                  onPress={() => openModal("city")}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.selectText}>
-                    {selectedCity || "Chọn thành phố"}
-                  </Text>
-                  <Ionicons name="chevron-down" size={18} color={Colors.text} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.selectField, !selectedCity && styles.disabled]}
-                  onPress={() => openModal("district")}
-                  disabled={!selectedCity}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.selectText}>
-                    {selectedDistrict || "Chọn quận/huyện"}
-                  </Text>
-                  <Ionicons name="chevron-down" size={18} color={Colors.text} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.selectField, !selectedDistrict && styles.disabled]}
-                  onPress={() => openModal("ward")}
-                  disabled={!selectedDistrict}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.selectText}>
-                    {selectedWard || "Chọn phường/xã"}
-                  </Text>
-                  <Ionicons name="chevron-down" size={18} color={Colors.text} />
-                </TouchableOpacity>
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.saveButton]}
-                    onPress={saveUserData}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.buttonText}>Lưu</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.cancelButton]}
-                    onPress={cancelEditing}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.buttonText}>Hủy</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              <>
-                <Text style={styles.addressText}>
-                  <Text style={styles.addressLabel}>Họ tên: </Text>
-                  {userData?.profile.full_name || "Đang tải..."}
-                </Text>
-                <Text style={styles.addressText}>
-                  <Text style={styles.addressLabel}>Địa chỉ: </Text>
-                  {userData?.profile.address || "Đang tải..."}
-                </Text>
-                <Text style={styles.addressText}>
-                  <Text style={styles.addressLabel}>Số điện thoại: </Text>
-                  {userData?.profile.phone || "Đang tải..."}
-                </Text>
-              </>
-            )}
-          </View>
+          <TouchableOpacity
+            style={styles.addressContainer}
+            onPress={handleSelectAddress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.addressText}>
+              <Text style={styles.addressLabel}>Họ tên: </Text>
+              {userData?.profile.full_name || "Đang tải..."}
+            </Text>
+            <Text style={styles.addressText}>
+              <Text style={styles.addressLabel}>Địa chỉ: </Text>
+              {userData?.profile.address || "Đang tải..."}
+            </Text>
+            <Text style={styles.addressText}>
+              <Text style={styles.addressLabel}>Số điện thoại: </Text>
+              {userData?.profile.phone || "Đang tải..."}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Product List Section */}
@@ -512,7 +458,7 @@ const Payment = () => {
             });
 
             if (response.ok) {
-              const seller = await response.json(); 
+              const seller = await response.json();
               await fetch(`${ipAddress}/api/notices`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -592,10 +538,10 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 120, 
+    paddingBottom: 120,
   },
   section: {
-    marginBottom: 24, 
+    marginBottom: 24,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -607,12 +553,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: Colors.text,
-    marginBottom:20
+    marginBottom: 20,
   },
   addressContainer: {
     backgroundColor: Colors.white,
     borderRadius: 16,
-    padding: 20, // Tăng padding để thoáng hơn
+    padding: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
@@ -638,7 +584,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 15,
     color: Colors.text,
-    height: 48, 
+    height: 48,
   },
   selectField: {
     flexDirection: "row",
@@ -687,13 +633,13 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end", 
+    justifyContent: "flex-end",
   },
   modalContent: {
     backgroundColor: Colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: "70%", 
+    maxHeight: "70%",
     padding: 20,
     paddingBottom: 40,
   },

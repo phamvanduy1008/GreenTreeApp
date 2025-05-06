@@ -159,7 +159,7 @@ export default function AccountScreen() {
                 icon="map-outline"
                 title="Địa chỉ giao hàng"
                 subtitle="Quản lý địa chỉ nhận hàng"
-                onPress={() => router.push("../page/account/acc/address")}
+                onPress={() => router.push("../page/address/address_delivery")}
               />
             </>
           )}
@@ -172,7 +172,6 @@ export default function AccountScreen() {
             subtitle="Kiểm tra sâu bệnh bạn gặp phải"
             onPress={() => router.push("../page/account/utility/modelAI")}
           />
-
 
           <MenuItem
             icon="pricetag-outline"
