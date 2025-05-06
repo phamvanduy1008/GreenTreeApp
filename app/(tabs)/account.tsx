@@ -1,7 +1,7 @@
 import { useClerk } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "../constants/Colors";
-import { useRouter } from "expo-router";
+import { useRouter,useFocusEffect  } from "expo-router";
 import { ipAddress } from "../constants/ip";
 import { IUser } from "../types/types";
 
@@ -32,40 +32,46 @@ export default function AccountScreen() {
   const [accountUser, setAccountUser] = useState<IUser>();
   const router = useRouter();
 
-  useEffect(() => {
-    const checkAuthentication = async () => {
-      try {
-        const userApi = await AsyncStorage.getItem("userData");
-        console.log("userApi", userApi);
+  const checkAuthentication = useCallback(async () => {
+    try {
+      const userApi = await AsyncStorage.getItem("userData");
+      console.log("userApi", userApi);
 
-        if (userApi || user) {
-          setIsAuthenticated(true);
+      if (userApi || user) {
+        setIsAuthenticated(true);
 
-          if (userApi) {
-            setAccountUser(JSON.parse(userApi));
-          } else if (user) {
-            const newUserData = {
-              profile: {
-                full_name: user.fullName,
-                avatar: user.imageUrl,
-              },
-            };
+        if (userApi) {
+          setAccountUser(JSON.parse(userApi));
+        } else if (user) {
+          const newUserData = {
+            profile: {
+              full_name: user.fullName,
+              avatar: user.imageUrl,
+            },
+          };
 
-            setAccountUser(newUserData as IUser);
-            await AsyncStorage.setItem("userData", JSON.stringify(newUserData));
-          }
-        } else {
-          setIsAuthenticated(false);
+          setAccountUser(newUserData as IUser);
+          await AsyncStorage.setItem("userData", JSON.stringify(newUserData));
         }
-      } catch (error) {
-        console.error("Lỗi khi kiểm tra user:", error);
+      } else {
         setIsAuthenticated(false);
       }
-    };
-
-    checkAuthentication();
+    } catch (error) {
+      console.error("Lỗi khi kiểm tra user:", error);
+      setIsAuthenticated(false);
+    }
   }, [user]);
 
+  useEffect(() => {
+    checkAuthentication();
+  }, [checkAuthentication]);
+
+  useFocusEffect(
+    useCallback(() => {
+      checkAuthentication();
+    }, [checkAuthentication])
+  );
+  
   const handleLogout = async () => {
     try {
       await signOut();
@@ -90,13 +96,12 @@ export default function AccountScreen() {
         {isAuthenticated ? (
           <View style={styles.profileSection}>
             <View style={styles.profileHeader}>
-              <Image
+            <Image
                 source={{
                   uri: `${ipAddress}/images/profile/${accountUser?.profile.avatar}`,
                 }}
                 style={styles.profileImage}
               />
-
               <View style={styles.profileInfo}>
                 <Text style={styles.profileName}>
                   {accountUser?.profile.full_name || user?.fullName}

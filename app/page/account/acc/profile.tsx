@@ -169,7 +169,6 @@ export default function ProfileScreen() {
   const handleGoBack = () => {
     navigation.goBack();
   };
-
   const handleSave = async () => {
     try {
       const userId = await AsyncStorage.getItem("userId");
@@ -177,7 +176,7 @@ export default function ProfileScreen() {
         setError("Không tìm thấy userId. Vui lòng đăng nhập lại.");
         return;
       }
-
+  
       const response = await fetch(`${ipAddress}/api/user/${userId}/update`, {
         method: "PUT",
         headers: {
@@ -193,15 +192,18 @@ export default function ProfileScreen() {
           email: profileData.email,
         }),
       });
-
+  
       if (!response.ok) {
         throw new Error("Lỗi khi cập nhật thông tin người dùng");
       }
-
+  
       const data = await response.json();
       if (data.success) {
         console.log("Cập nhật thông tin người dùng thành công:", data.user);
         alert("Cập nhật hồ sơ thành công!");
+        // Lưu dữ liệu vào AsyncStorage
+        await AsyncStorage.setItem("userData", JSON.stringify(data.user));
+        // Không điều hướng, vẫn ở lại trang ProfileScreen
       } else {
         setError(data.message || "Không thể cập nhật thông tin người dùng");
       }
@@ -211,7 +213,6 @@ export default function ProfileScreen() {
       setError(errorMessage);
     }
   };
-
   const handleEditField = (field: string, currentValue: string) => {
     setEditingField(field);
     setTempValue(currentValue);
