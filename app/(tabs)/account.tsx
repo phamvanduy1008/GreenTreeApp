@@ -167,6 +167,14 @@ export default function AccountScreen() {
           <Text style={styles.menuTitle}>Tiện ích</Text>
 
           <MenuItem
+            icon="pulse-outline"
+            title="Chuẩn đoán sâu bệnh"
+            subtitle="Kiểm tra sâu bệnh bạn gặp phải"
+            onPress={() => router.push("../page/account/utility/modelAI")}
+          />
+
+
+          <MenuItem
             icon="pricetag-outline"
             title="Giá cả"
             subtitle="Kiểm tra bảng giá sản phẩm"
