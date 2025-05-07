@@ -186,7 +186,7 @@ const FavouriteItem = () => {
       </Text>
       <TouchableOpacity
         style={styles.shopButton}
-        onPress={() => router.push("/")}
+        onPress={() => router.push("/(tabs)/shop")}
       >
         <Text style={styles.shopButtonText}>Mua sắm ngay</Text>
       </TouchableOpacity>
@@ -420,8 +420,8 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: "center",
-    justifyContent: "center",
     padding: 20,
+    marginBottom:180,
   },
   emptyText: {
     fontSize: 16,

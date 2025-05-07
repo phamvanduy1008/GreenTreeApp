@@ -61,13 +61,13 @@ export default function UserChat() {
           if (id) {
             setUserId(id);
           } else {
-            console.error("Không tìm thấy _id trong userData");
+            console.log("Không tìm thấy _id trong userData");
           }
         } else {
-          console.error("Không tìm thấy userData trong AsyncStorage");
+          console.log("Không tìm thấy userData trong AsyncStorage");
         }
       } catch (error) {
-        console.error("Lỗi khi lấy userId từ AsyncStorage:", error);
+        console.log("Lỗi khi lấy userId từ AsyncStorage:", error);
       }
     };
 

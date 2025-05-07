@@ -190,12 +190,11 @@ const AddressDelivery = () => {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         <View style={styles.header}>
           <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#53B175" />
+            <Ionicons name="chevron-back" size={24} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Chọn địa chỉ nhận hàng</Text>
           <View style={styles.headerRightPlaceholder} />

@@ -292,12 +292,12 @@ const Payment = () => {
                 {formatPrice(shippingFee)} ₫
               </Text>
             </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Tổng thanh toán</Text>
-              <Text style={styles.detailValue}>
-                {formatPrice(Number(totalPrice) + shippingFee)} ₫
-              </Text>
-            </View>
+            <View style={styles.paymentRowTotal}>
+                        <Text style={styles.paymentLabelTotal}>Tổng thanh toán:</Text>
+                        <Text style={styles.paymentValueTotal}>
+                        {formatPrice(Number(totalPrice) + shippingFee)} ₫
+                        </Text>
+                  </View>
           </View>
         </View>
       </ScrollView>
@@ -662,6 +662,22 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: Colors.text,
+  },
+  paymentRowTotal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+  paymentLabelTotal: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  paymentValueTotal: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.primary,
   },
   confirmButton: {
     position: "absolute",
