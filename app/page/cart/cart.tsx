@@ -54,10 +54,10 @@ const Cart = () => {
           console.log("userId từ userData:", fetchedUserId);
           setUserId(fetchedUserId);
         } else {
-          console.error("Không tìm thấy userData trong AsyncStorage");
+          console.log("Không tìm thấy userData trong AsyncStorage");
         }
       } catch (error) {
-        console.error("Lỗi khi lấy userData từ AsyncStorage:", error);
+        console.log("Lỗi khi lấy userData từ AsyncStorage:", error);
       }
     };
     getUserId();

@@ -30,6 +30,7 @@ const ProductDetail = () => {
   const [categoryName, setCategoryName] = useState<string>('Không xác định');
   const [heart, setHeart] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [isLoginModalVisible, setLoginModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -106,7 +107,7 @@ const ProductDetail = () => {
     try {
       const userData = await AsyncStorage.getItem('userData');
       if (!userData) {
-        setError('Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.');
+        setLoginModalVisible(true);
         return;
       }
 
@@ -141,7 +142,7 @@ const ProductDetail = () => {
     try {
       const userData = await AsyncStorage.getItem('userData');
       if (!userData) {
-        setError('Bạn cần đăng nhập để thêm sản phẩm vào danh sách yêu thích.');
+        setLoginModalVisible(true);
         return;
       }
       const user = JSON.parse(userData);
@@ -218,7 +219,6 @@ const ProductDetail = () => {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -226,7 +226,7 @@ const ProductDetail = () => {
           contentContainerStyle={styles.scrollViewContent}
         >
           <View style={styles.header}>
-            <TouchableOpacity onPress={handleGoBack}>
+            <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
               <Ionicons name="chevron-back" size={24} color="black" />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleAddToFavourite}>
@@ -239,105 +239,130 @@ const ProductDetail = () => {
               source={product?.image ? { uri: `${ipAddress}/${product.image}` } : require('../../../assets/images/test.png')}
               style={styles.imgPlant}
             />
-          </View>
-
-          <View style={styles.productInfoContainer}>
-            <View style={styles.titleRow}>
-              <Text style={styles.productName}>{product?.name || 'Tên sản phẩm'}</Text>
-              <Text
-                style={[
-                  styles.statusText,
-                  product?.status === 'available' ? styles.statusAvailable : styles.statusOutOfStock,
-                ]}
-              >
-                {product?.status === 'available' ? 'Còn hàng' : 'Hết hàng'}
-              </Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>{categoryName}</Text>
-            </View>
-
-            <View style={styles.quantityPriceRow}>
-              <View style={styles.quantitySelector}>
-                <TouchableOpacity style={styles.quantityButton} onPress={decreaseQuantity}>
-                  <Ionicons name="remove" size={24} color="black" />
-                </TouchableOpacity>
-                <Text style={styles.quantity}>{quantity}</Text>
-                <TouchableOpacity style={styles.quantityButton} onPress={increaseQuantity}>
-                  <Ionicons name="add" size={24} color="green" />
-                </TouchableOpacity>
+            <View style={styles.productInfoContainer}>
+              <View style={styles.titleRow}>
+                <Text style={styles.productName}>{product?.name || 'Tên sản phẩm'}</Text>
+                <Text
+                  style={[
+                    styles.statusText,
+                    product?.status === 'available' ? styles.statusAvailable : styles.statusOutOfStock,
+                  ]}
+                >
+                  {product?.status === 'available' ? 'Còn hàng' : 'Hết hàng'}
+                </Text>
               </View>
-              <Text style={styles.price}>{product?.price ? formatPrice(quantity * product.price) : '0 VNĐ'}</Text>
-            </View>
-            <View style={styles.detail}>
-              <TouchableOpacity style={styles.detailDropdown} onPress={toggleDescription}>
-                <Text style={styles.sectionTitle}>Mô tả sản phẩm</Text>
-                <Ionicons
-                  name={isDescriptionOpen ? 'chevron-up' : 'chevron-down'}
-                  size={24}
-                  color="black"
-                />
-              </TouchableOpacity>
-              {isDescriptionOpen && (
-                <Text style={styles.productDescription}>{product?.info || 'Không có mô tả'}</Text>
-              )}
-            </View>
-
-            {product?.evaluate && (
-              <TouchableOpacity onPress={handleViewReviews} style={styles.section}>
-                <Text style={styles.sectionTitle}>Đánh giá</Text>
-                <View style={styles.sectionRight}>
-                  <View style={styles.starRating}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Ionicons
-                        key={star}
-                        name={star <= Math.round(product.evaluate) ? 'star' : 'star-outline'}
-                        size={16}
-                        color="#F3603F"
-                      />
-                    ))}
-                  </View>
-                  <Ionicons name="chevron-forward" size={24} color="black" />
+              <View style={styles.infoRow}>
+                <Text style={styles.infoText}>{categoryName}</Text>
+              </View>
+    
+              <View style={styles.quantityPriceRow}>
+                <View style={styles.quantitySelector}>
+                  <TouchableOpacity style={styles.quantityButton} onPress={decreaseQuantity}>
+                    <Ionicons name="remove" size={24} color="black" />
+                  </TouchableOpacity>
+                  <Text style={styles.quantity}>{quantity}</Text>
+                  <TouchableOpacity style={styles.quantityButton} onPress={increaseQuantity}>
+                    <Ionicons name="add" size={24} color="green" />
+                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
-            )}
-            <View style={styles.productSimilerArea}>
-              <Text style={styles.sectionTitleSimiler}>Sản phẩm tương tự</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {productSimiler.map((item, index) => (
-                  <ProductCard key={index} item={item} />
-                ))}
-              </ScrollView>
+                <Text style={styles.price}>{product?.price ? formatPrice(quantity * product.price) : '0 VNĐ'}</Text>
+              </View>
+              <View style={styles.detail}>
+                <TouchableOpacity style={styles.detailDropdown} onPress={toggleDescription}>
+                  <Text style={styles.sectionTitle}>Mô tả sản phẩm</Text>
+                  <Ionicons
+                    name={isDescriptionOpen ? 'chevron-up' : 'chevron-down'}
+                    size={24}
+                    color="black"
+                  />
+                </TouchableOpacity>
+                {isDescriptionOpen && (
+                  <Text style={styles.productDescription}>{product?.info || 'Không có mô tả'}</Text>
+                )}
+              </View>
+    
+              {product?.evaluate && (
+                <TouchableOpacity onPress={handleViewReviews} style={styles.section}>
+                  <Text style={styles.sectionTitle}>Đánh giá</Text>
+                  <View style={styles.sectionRight}>
+                    <View style={styles.starRating}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Ionicons
+                          key={star}
+                          name={star <= Math.round(product.evaluate) ? 'star' : 'star-outline'}
+                          size={16}
+                          color="#F3603F"
+                        />
+                      ))}
+                    </View>
+                    <Ionicons name="chevron-forward" size={24} color="black" />
+                  </View>
+                </TouchableOpacity>
+              )}
+              <View style={styles.productSimilerArea}>
+                <Text style={styles.sectionTitleSimiler}>Sản phẩm tương tự</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {productSimiler.map((item, index) => (
+                    <ProductCard key={index} item={item} />
+                  ))}
+                </ScrollView>
+              </View>
             </View>
+          </ScrollView>
+    
+          <View style={styles.fixedButtonContainer}>
+            <TouchableOpacity
+              style={[
+                styles.addToBasketButton,
+                product?.status === 'out_of_stock' && styles.disabledButton,
+              ]}
+              onPress={handleAddToBasket}
+              disabled={product?.status === 'out_of_stock'}
+            >
+              <Text style={styles.addToBasketText}>
+                {product?.status === 'out_of_stock' ? 'Sản phẩm hết hàng' : 'Thêm vào giỏ hàng'}
+              </Text>
+            </TouchableOpacity>
           </View>
-        </ScrollView>
-
-        <View style={styles.fixedButtonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.addToBasketButton,
-              product?.status === 'out_of_stock' && styles.disabledButton,
-            ]}
-            onPress={handleAddToBasket}
-            disabled={product?.status === 'out_of_stock'}
-          >
-            <Text style={styles.addToBasketText}>
-              {product?.status === 'out_of_stock' ? 'Sản phẩm hết hàng' : 'Thêm vào giỏ hàng'}
-            </Text>
-          </TouchableOpacity>
+    
+          {showPopup && (
+            <View style={styles.popupContainer}>
+              <View style={styles.popupContent}>
+                <Text style={styles.popupIcon}>🛒</Text>
+                <Text style={styles.popupText}>Đã thêm vào giỏ hàng!</Text>
+              </View>
+            </View>
+          )}
+    
+          {isLoginModalVisible && (
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Yêu cầu đăng nhập</Text>
+                <Text style={styles.modalText}>Bạn cần đăng nhập để thực hiện hành động này.</Text>
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={styles.modalButton}
+                    onPress={() => setLoginModalVisible(false)}
+                  >
+                    <Text style={styles.modalButtonText}>Quay lại</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.loginButton]}
+                    onPress={() => {
+                      setLoginModalVisible(false);
+                      router.push('/auth/login'); 
+                    }}
+                  >
+                    <Text style={[styles.modalButtonText, { color: '#fff' }]}>Đăng nhập</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
-
-        {showPopup && (
-          <View style={styles.popupContainer}>
-            <View style={styles.popupContent}>
-              <Text style={styles.popupIcon}>🛒</Text>
-              <Text style={styles.popupText}>Đã thêm vào giỏ hàng!</Text>
-            </View>
-          </View>
-        )}
-      </View>
-    </>
-  );
+      </>
+    );
 };
 
 const styles = StyleSheet.create({
@@ -373,6 +398,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     paddingTop: 40,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#F5F5F5",
   },
   areaImage: {
     justifyContent: 'center',
@@ -561,6 +591,62 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#7C7C7C',
     fontWeight: '500',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 12,
+    width: '80%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#181725',
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#7C7C7C',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    flex: 1,
+    padding: 12,
+    alignItems: 'center',
+    borderRadius: 8,
+    backgroundColor: '#F5F5F5',
+    marginHorizontal: 5,
+  },
+  loginButton: {
+    backgroundColor: '#53B175',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#181725',
   },
 });
 

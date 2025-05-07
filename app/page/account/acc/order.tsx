@@ -603,9 +603,9 @@ const OrderInterface: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>{'←'}</Text>
-        </TouchableOpacity>
+        <TouchableOpacity onPress={()=>{router.back();}} style={styles.backButton}>
+                    <Ionicons name="chevron-back" size={24} color="#333" />
+         </TouchableOpacity>
         <Text style={styles.headerTitle}>Đơn đã mua</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity
@@ -647,13 +647,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 15,
-    paddingTop: 60,
+    paddingTop: 50,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
   backButton: {
-    padding: 5,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#F5F5F5",
   },
   backButtonText: {
     fontSize: 24,
@@ -664,7 +666,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     color: '#333',
-    marginLeft: 10,
+    marginLeft:85,
   },
   headerActions: {
     flexDirection: 'row',

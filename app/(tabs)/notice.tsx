@@ -39,7 +39,8 @@ const NoticeScreen: React.FC = () => {
     try {
       const userData = await AsyncStorage.getItem("userData");
       if (!userData) {
-        throw new Error("Bạn cần đăng nhập để xem thông báo");
+        setNotices([]); 
+        return;
       }
 
       const { _id: userId } = JSON.parse(userData);
