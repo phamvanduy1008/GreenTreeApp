@@ -1,25 +1,42 @@
-📱 MyApp – Ứng dụng React Native với Expo
-Chào mừng bạn đến với MyApp, một ứng dụng di động được phát triển bằng React Native và Expo. Dự án này sử dụng file-based routing để xây dựng ứng dụng đa nền tảng (iOS, Android) với giao diện hiện đại và hiệu năng tối ưu.
 
-🚀 Bắt đầu
-1. Cài đặt dependencies
+# MyApp – React Native với Expo
+
+![MyApp Logo](https://example.com/logo.png)
+
+MyApp là một ứng dụng di động đa nền tảng (iOS, Android) được phát triển bằng **React Native** và **Expo**. Dự án sử dụng **file-based routing** để xây dựng giao diện người dùng hiện đại, dễ mở rộng.
+
+---
+
+## 🚀 Bắt đầu
+
+### 1. Cài đặt dependencies
+
 Cài đặt các thư viện cần thiết:
+
+```bash
 npm install
+```
 
-2. Khởi động ứng dụng
-Chạy dự án với Expo:
+### 2. Khởi động ứng dụng
+
+Chạy dự án:
+
+```bash
 npx expo start
+```
 
-Sau khi khởi động, bạn có thể:
+### Tùy chọn sau khi khởi động:
 
-Quét mã QR bằng ứng dụng Expo Go trên iOS hoặc Android.
-Nhấn a để chạy trên Android Emulator.
-Nhấn i để chạy trên iOS Simulator (chỉ trên macOS).
-Nhấn w để chạy trên trình duyệt web.
+- Quét mã QR bằng **Expo Go** trên iOS/Android.
+- Nhấn `a` để chạy trên **Android Emulator**.
+- Nhấn `i` để chạy trên **iOS Simulator** (macOS).
+- Nhấn `w` để chạy trên **trình duyệt web**.
 
+---
 
-🗂 Cấu trúc thư mục
-Dự án được tổ chức như sau:
+## 🗂 Cấu trúc thư mục
+
+```plaintext
 GREENTREEAPP/
 ├── app/                    # Trang và logic định tuyến
 │   ├── (tabs)/             # Bottom Tabs navigation
@@ -40,53 +57,62 @@ GREENTREEAPP/
 ├── package.json            # Dependencies và scripts
 ├── tsconfig.json           # Cấu hình TypeScript
 └── README.md               # File này
+```
 
+---
 
-🧱 Công nghệ sử dụng
+## 🧱 Công nghệ sử dụng
 
-React Native: Xây dựng ứng dụng di động đa nền tảng.
-Expo: Hỗ trợ phát triển và triển khai nhanh.
-React Router: Quản lý định tuyến.
-TypeScript: Đảm bảo mã nguồn an toàn.
+- **React Native**: Framework ứng dụng di động.
+- **Expo**: Công cụ phát triển và triển khai.
+- **React Router**: Quản lý định tuyến.
+- **TypeScript**: Đảm bảo mã nguồn an toàn.
 
+---
 
-📦 Lệnh bổ sung
+## 📦 Lệnh bổ sung
 
-Reset cache:
+- **Reset cache**:
 
-npx expo start --clear
+  ```bash
+  npx expo start --clear
+  ```
 
+- **Cài thư viện mới**:
 
-Cài thư viện mới:
+  ```bash
+  npm install [package-name]
+  ```
 
-npm install [package-name]
+- **Reset dự án (tạo mã mới)**:
 
+  ```bash
+  npm run reset-project
+  ```
 
-Reset dự án (tạo dự án mới từ mẫu):
+---
 
-npm run reset-project
+## 📚 Tài liệu tham khảo
 
-Lệnh này sẽ di chuyển mã khởi tạo vào thư mục app-example và tạo một thư mục app trống để bắt đầu phát triển.
+- [Expo Documentation](https://docs.expo.dev): Hướng dẫn cơ bản và nâng cao.
+- [Learn Expo Tutorial](https://learn.expo.dev/tutorials/): Xây dựng ứng dụng từng bước.
+- [Expo on GitHub](https://github.com/expo/expo): Mã nguồn mở.
+- [Discord Community](https://discord.com/invite/expo): Cộng đồng hỗ trợ.
 
-📚 Tài liệu tham khảo
+---
 
-Expo Documentation: Tìm hiểu cơ bản hoặc các chủ đề nâng cao.
-Learn Expo Tutorial: Hướng dẫn từng bước xây dựng ứng dụng.
-Expo on GitHub: Góp phần vào mã nguồn mở.
-Discord Community: Kết nối với cộng đồng Expo.
+## ✍️ Tác giả
 
+- Nhóm: Green
+- Email: [phamvanduy.dev@gmail.com](mailto:phamvanduy.dev@gmail.com)
+- GitHub: [GreenTreeApp](https://github.com/GreenTreeApp)
 
-✍️ Tác giả
+---
 
-Họ tên: Nhóm Green
-Email: phamvanduy.dev@gmail.com
-GitHub: GreenTreeApp
+## 📝 Ghi chú
 
-
-📝 Ghi chú
-
-Đảm bảo đã cài Node.js và Expo CLI.
-Để phát triển, chỉnh sửa các file trong thư mục app.
-Nếu gặp sự cố, tham khảo tài liệu Expo hoặc liên hệ tác giả.
+- Cần cài **Node.js** và **Expo CLI**.
+- Chỉnh sửa file trong thư mục `app` để phát triển.
+- Liên hệ tác giả nếu gặp vấn đề.
 
 Cảm ơn bạn đã sử dụng MyApp! 🎉
