@@ -1,50 +1,69 @@
-# Welcome to your Expo app 👋
+# 📱 MyApp – Ứng dụng React Native với Expo
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Đây là một dự án React Native được tạo với [Expo](https://expo.dev), giúp bạn bắt đầu phát triển ứng dụng di động một cách nhanh chóng và hiệu quả.
 
-## Get started
+---
 
-1. Install dependencies
+## 🚀 Bắt đầu
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### 1. Clone dự án
 
 ```bash
-npm run reset-project
-```
+git clone https://github.com/phamvanduy1008/GreenTreeApp.git
+cd GreenTreeApp
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Cài đặt dependencies
+npm install
 
-## Learn more
+3. Chạy ứng dụng
+npm start
 
-To learn more about developing your project with Expo, look at the following resources:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Dùng Expo Go (Android/iOS) để quét QR code
+Nhấn a để chạy Android Emulator (nếu có)
+Nhấn w để chạy trên Web
+Nhấn i để chạy iOS Simulator (macOS)
 
-## Join the community
+🗂 Cấu trúc thư mục
+GREENTREEAPP/
+├── app/                    # Router-based pages & logic
+│   ├── (tabs)/             # Các tab trong app (BottomTabs)
+│   ├── auth/               # Đăng nhập, đăng ký, quên mật khẩu
+│   ├── components/         # Tái sử dụng UI components
+│   ├── constants/          # Biến cứng, style, config
+│   ├── page/               # Các trang chính khác
+│   ├── popup/              # Giao diện popup (modal, toast,...)
+│   ├── types/              # TypeScript types & interfaces
+│   └── _layout.tsx         # Cấu trúc định tuyến toàn cục
+├── assets/                 # Hình ảnh, fonts,...
+├── hooks/                  # Custom React hooks
+├── node_modules/           # Tự động sinh bởi npm
+├── scripts/                # File script hoặc config tùy chỉnh
+├── utils/                  # Hàm tiện ích (format, convert,...)
+├── .env                    # Biến môi trường
+├── .gitignore
+├── app.json                # Cấu hình chính của Expo
+├── expo-env.d.ts
+├── package.json
+├── package-lock.json
+├── react-native.config.js
+├── tsconfig.json           # Cấu hình TypeScript
+└── README.md               # File hướng dẫn (chính là file này)
 
-Join our community of developers creating universal apps.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+🧱 Công nghệ sử dụng
+React Native
+Expo
+React Router
+TypeScript 
+
+📦 Lệnh bổ sung
+Reset dự án & xóa cache:
+npx expo start --clear
+Cài thư viện mới:
+npm install [package-name]
+
+✍️ Tác giả
+Họ tên: Nhóm Green
+Email: phamvanduy.dev@gmail.com
+Github: https://github.com/phamvanduy1008/GreenTreeApp.git
