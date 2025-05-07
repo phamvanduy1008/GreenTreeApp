@@ -123,7 +123,7 @@ const SearchPage = () => {
             keyExtractor={(item) => item._id}
             renderItem={({ item }) => (
               <TouchableOpacity onPress={() => handleSuggestionPress(item.name)} style={styles.suggestionItemContainer}>
-                <Image source={{ uri: item.image }} style={styles.suggestionImage} />
+                <Image source={{ uri:  `${ipAddress}/${item.image}` }} style={styles.suggestionImage} />
                 <Text style={styles.suggestionText}>{item.name}</Text>
               </TouchableOpacity>
             )}

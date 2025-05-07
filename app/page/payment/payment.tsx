@@ -11,6 +11,7 @@ import {
   Modal,
   Platform,
   StatusBar,
+  Linking,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Colors } from "../../constants/Colors";
@@ -55,7 +56,7 @@ interface UserData {
 const Payment = () => {
   const { selectedItems, totalPrice } = useLocalSearchParams();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<"qr" | "cod">("cod");
+  const [paymentMethod, setPaymentMethod] = useState<"momo" | "cod">("cod");
   const [totalQuantity, setTotalQuantity] = useState<number>(0);
   const [shippingFee, setShippingFee] = useState<number>(0);
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -66,6 +67,7 @@ const Payment = () => {
   const [selectedCity, setSelectedCity] = useState<string>("Đà Nẵng");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("");
   const [selectedWard, setSelectedWard] = useState<string>("");
+  const [momoId, setMomoId] = useState<string>("");
   const [modalVisible, setModalVisible] = useState<
     "city" | "district" | "ward" | null
   >(null);
@@ -139,6 +141,7 @@ const Payment = () => {
       },
     });
   };
+
   const handleSelect = (item: string) => {
     if (modalVisible === "city") {
       setSelectedCity(item);
@@ -151,6 +154,208 @@ const Payment = () => {
       setSelectedWard(item);
     }
     setModalVisible(null);
+  };
+
+  const checkTransactionStatus = async (orderId: string) => {
+    if (!userData) {
+      alert("Không tìm thấy thông tin người dùng");
+      return;
+    }
+    const startTime = Date.now();
+    const timeout = 5 * 60 * 1000; 
+    const interval = 10 * 1000; 
+
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await fetch(
+          `${ipAddress}/check-status-transaction`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId }),
+          }
+        );
+
+        const result = await response.json();
+
+        if (result.resultCode === 0) {
+          // Thanh toán thành công
+          clearInterval(intervalId);
+          const orderData = {
+            userId: userData._id,
+            items: cartItems.map((item) => ({
+              productId: item.product._id,
+              quantity: item.quantity,
+              price: item.product.price,
+            })),
+            paymentMethod: paymentMethod,
+            name: userData.profile.full_name,
+            address: userData.profile.address,
+            phone: userData.profile.phone,
+            fee: shippingFee,
+            total_price: Number(totalPrice) + shippingFee,
+            momoId: orderId,
+          };
+
+          const orderResponse = await fetch(`${ipAddress}/api/sellers`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orderData),
+          });
+
+          if (orderResponse.ok) {
+            const seller = await orderResponse.json();
+            await fetch(`${ipAddress}/api/notices`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user: userData._id,
+                order: seller.order._id,
+                title: "Đơn hàng mới",
+                message: `Đơn hàng ${seller.order.orderCode} đã được đặt thành công.`,
+                type: "pending",
+              }),
+            });
+
+            await Promise.all(
+              cartItems.map(async (item) => {
+                await fetch(`${ipAddress}/api/user-cart/${item._id}`, {
+                  method: "DELETE",
+                });
+              })
+            );
+
+            router.push("/popup/success/success");
+          } else {
+            const errorData = await orderResponse.json();
+            alert(errorData.message || "Lưu đơn hàng thất bại.");
+          }
+        } else if (Date.now() - startTime >= timeout) {
+          // Hết thời gian 5 phút
+          clearInterval(intervalId);
+          alert("Thời gian xác nhận thanh toán đã hết. Vui lòng thử lại.");
+        }
+      } catch (error) {
+        console.error("Lỗi khi kiểm tra trạng thái giao dịch:", error);
+        if (Date.now() - startTime >= timeout) {
+          clearInterval(intervalId);
+          alert("Thời gian xác nhận thanh toán đã hết. Vui lòng thử lại.");
+        }
+      }
+    }, interval);
+    return () => clearInterval(intervalId);
+  };
+
+  const handelMomo = async () => {
+    if (!userData) {
+      alert("Không tìm thấy thông tin người dùng");
+      return;
+    }
+    try {
+      const orderData = {
+        userId: userData._id,
+        items: cartItems.map((item) => ({
+          productId: item.product._id,
+          quantity: item.quantity,
+          price: item.product.price,
+        })),
+        paymentMethod: paymentMethod,
+        name: userData.profile.full_name,
+        address: userData.profile.address,
+        phone: userData.profile.phone,
+        fee: shippingFee,
+        total_price: Number(totalPrice) + shippingFee,
+      };
+      const response = await fetch(`${ipAddress}/payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      });
+
+      if (response.ok) {
+        const momoData = await response.json();
+        setMomoId(momoData.requestId);
+        if (momoData.payUrl) {
+          const canOpen = await Linking.canOpenURL(momoData.payUrl);
+          if (canOpen) {
+            await Linking.openURL(momoData.payUrl);
+            await AsyncStorage.setItem("pendingMomoOrderId", momoData.orderId);
+            checkTransactionStatus(momoData.orderId);
+          } else {
+            alert("Không thể mở liên kết thanh toán MoMo. Vui lòng thử lại.");
+          }
+        } else {
+          alert("Không nhận được liên kết thanh toán từ MoMo.");
+        }
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || "Đặt hàng thất bại. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi thanh toán qua MoMo:", error);
+      alert("Có lỗi xảy ra khi thanh toán qua MoMo. Vui lòng thử lại.");
+    }
+  };
+
+  const handelPay = async () => {
+    if (!userData) {
+      alert("Không tìm thấy thông tin người dùng");
+      return;
+    }
+
+    try {
+      const orderData = {
+        userId: userData._id,
+        items: cartItems.map((item) => ({
+          productId: item.product._id,
+          quantity: item.quantity,
+          price: item.product.price,
+        })),
+        paymentMethod: paymentMethod,
+        name: userData.profile.full_name,
+        address: userData.profile.address,
+        phone: userData.profile.phone,
+        fee: shippingFee,
+        total_price: Number(totalPrice) + shippingFee,
+      };
+
+      const response = await fetch(`${ipAddress}/api/sellers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData),
+      });
+
+      if (response.ok) {
+        const seller = await response.json();
+        await fetch(`${ipAddress}/api/notices`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user: userData._id,
+            order: seller.order._id,
+            title: "Đơn hàng mới",
+            message: `Đơn hàng ${seller.order.orderCode} đã được đặt thành công.`,
+            type: "pending",
+          }),
+        });
+
+        await Promise.all(
+          cartItems.map(async (item) => {
+            await fetch(`${ipAddress}/api/user-cart/${item._id}`, {
+              method: "DELETE",
+            });
+          })
+        );
+
+        router.push("/popup/success/success");
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || "Đặt hàng thất bại. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi đặt hàng:", error);
+      alert("Có lỗi xảy ra. Vui lòng thử lại.");
+    }
   };
 
   const renderItem = ({ item }: { item: CartItem }) => (
@@ -200,7 +405,6 @@ const Payment = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Address Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Thông tin địa chỉ</Text>
@@ -225,7 +429,6 @@ const Payment = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Product List Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Sản phẩm</Text>
           <FlatList
@@ -237,7 +440,6 @@ const Payment = () => {
           />
         </View>
 
-        {/* Payment Method Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
           <TouchableOpacity
@@ -256,27 +458,20 @@ const Payment = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.radioContainer}
-            onPress={() => setPaymentMethod("qr")}
+            onPress={() => setPaymentMethod("momo")}
             activeOpacity={0.7}
           >
             <Ionicons
               name={
-                paymentMethod === "qr" ? "radio-button-on" : "radio-button-off"
+                paymentMethod === "momo" ? "radio-button-on" : "radio-button-off"
               }
               size={20}
               color={Colors.primary}
             />
-            <Text style={styles.radioText}>Thanh toán qua QR code</Text>
+            <Text style={styles.radioText}>Thanh toán qua ví MoMo</Text>
           </TouchableOpacity>
-          {paymentMethod === "qr" && (
-            <Image
-              source={require("../../../assets/images/payment/qr.png")}
-              style={styles.qr}
-            />
-          )}
         </View>
 
-        {/* Payment Details Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Chi tiết thanh toán</Text>
           <View style={styles.detailContainer}>
@@ -293,16 +488,15 @@ const Payment = () => {
               </Text>
             </View>
             <View style={styles.paymentRowTotal}>
-                        <Text style={styles.paymentLabelTotal}>Tổng thanh toán:</Text>
-                        <Text style={styles.paymentValueTotal}>
-                        {formatPrice(Number(totalPrice) + shippingFee)} ₫
-                        </Text>
-                  </View>
+              <Text style={styles.paymentLabelTotal}>Tổng thanh toán:</Text>
+              <Text style={styles.paymentValueTotal}>
+                {formatPrice(Number(totalPrice) + shippingFee)} ₫
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
 
-      {/* Selection Modal */}
       <Modal
         visible={!!modalVisible}
         transparent={true}
@@ -335,76 +529,23 @@ const Payment = () => {
         </View>
       </Modal>
 
-      <TouchableOpacity
-        style={styles.confirmButton}
-        onPress={async () => {
-          if (!userData) {
-            alert("Không tìm thấy thông tin người dùng");
-            return;
-          }
-
-          try {
-            const orderData = {
-              userId: userData._id,
-              items: cartItems.map((item) => ({
-                productId: item.product._id,
-                quantity: item.quantity,
-                price: item.product.price,
-              })),
-              paymentMethod: paymentMethod,
-              name: userData.profile.full_name,
-              address: userData.profile.address,
-              phone: userData.profile.phone,
-              fee: shippingFee,
-              total_price: Number(totalPrice) + shippingFee,
-            };
-
-            const response = await fetch(`${ipAddress}/api/sellers`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(orderData),
-            });
-
-            if (response.ok) {
-              const seller = await response.json();
-              await fetch(`${ipAddress}/api/notices`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  user: userData._id,
-                  order: seller.order._id,
-                  title: "Đơn hàng mới",
-                  message: `Đơn hàng ${seller.order.orderCode} đã được đặt thành công.`,
-                  type: "pending",
-                }),
-              });
-
-              await Promise.all(
-                cartItems.map(async (item) => {
-                  await fetch(`${ipAddress}/api/user-cart/${item._id}`, {
-                    method: "DELETE",
-                  });
-                })
-              );
-
-              router.push("../../popup/success/success");
-            } else {
-              const errorData = await response.json();
-              alert(
-                errorData.message || "Đặt hàng thất bại. Vui lòng thử lại."
-              );
-            }
-          } catch (error) {
-            console.error("Lỗi khi đặt hàng:", error);
-            alert("Có lỗi xảy ra. Vui lòng thử lại.");
-          }
-        }}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.confirmText}>
-          {paymentMethod === "cod" ? "Mua hàng" : "Xác nhận thanh toán"}
-        </Text>
-      </TouchableOpacity>
+      {paymentMethod === "cod" ? (
+        <TouchableOpacity
+          style={styles.confirmButton}
+          onPress={handelPay}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.confirmText}>Xác nhận thanh toán</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.confirmButton}
+          onPress={handelMomo}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.confirmText}>Thanh toán với ví MoMo</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -632,13 +773,6 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginLeft: 12,
   },
-  qr: {
-    width: 180,
-    height: 180,
-    alignSelf: "center",
-    marginVertical: 16,
-    borderRadius: 12,
-  },
   detailContainer: {
     backgroundColor: Colors.white,
     borderRadius: 16,
@@ -664,19 +798,19 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   paymentRowTotal: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: 10,
     marginTop: 4,
   },
   paymentLabelTotal: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
   },
   paymentValueTotal: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: Colors.primary,
   },
   confirmButton: {
@@ -693,6 +827,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 6,
+    marginBottom:10
   },
   confirmText: {
     color: Colors.white,
