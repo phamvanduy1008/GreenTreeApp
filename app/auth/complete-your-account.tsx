@@ -15,7 +15,7 @@ import TextInput from "@/app/components/common/Forms/TextInput";
 import RadioButtonInput from "@/app/components/common/Forms/RadioButtonInput";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ipAddress } from "../constants/ip";
-
+import { Colors } from "../constants/Colors";
 const CompleteYourAccountScreen = () => {
   const { user, isLoaded } = useUser();
   const [isLoading, setIsLoading] = useState(false);
@@ -33,59 +33,75 @@ const CompleteYourAccountScreen = () => {
   const onSubmit = async (data: any) => {
     const { full_name, username, gender } = data;
 
-    
     try {
       setIsLoading(true);
-
       const emailApi = await AsyncStorage.getItem("email");
       const emailClerk = user?.primaryEmailAddress?.emailAddress || "";
       const email = emailApi || emailClerk;
-      console.log("email", email);
 
       await user?.update({
         unsafeMetadata: {
-          full_name, 
-          username, 
+          full_name,
+          username,
           gender,
           onboarding_completed: true,
         },
       });
+
       if (email) {
         const response = await fetch(`${ipAddress}/update-infor`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, full_name, username, gender }),
         });
-      
+
         if (response.ok) {
           await AsyncStorage.setItem("ok", "true");
+          const updatedUserData = {
+            email,
+            profile: {
+              full_name,
+              username,
+              gender,
+              birthday: null,
+              phone: "",
+              avatar: "",
+            },
+            onboarding_completed: 1,
+            isActive: true,
+            isVerified: false,
+            addresses: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          await AsyncStorage.setItem("userData", JSON.stringify(updatedUserData));
         }
-      }      
-      
+      }
+
       await user?.reload();
       return router.push("/(tabs)");
     } catch (error: any) {
       if (error.message === "That username is taken. Please try another.") {
-        return setError("username", { message: "Username is already taken" });
+        return setError("username", { message: "Tên người dùng đã tồn tại" });
       }
-      return setError("full_name", { message: "An error occurred" });
+      return setError("full_name", { message: "Đã xảy ra lỗi" });
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-  if (!isLoaded || !user) return;
+    if (!isLoaded || !user) return;
 
-  setValue("full_name", user.fullName || "");
-  setValue("username", user.username || "");
-  setValue("gender", String(user.unsafeMetadata?.gender) || "");
+    setValue("full_name", user.fullName || "");
+    setValue("username", user.username || "");
+    setValue("gender", String(user.unsafeMetadata?.gender) || "");
 
-  const userEmail = user.primaryEmailAddress?.emailAddress;
-  if (userEmail) {
-    AsyncStorage.setItem("email", userEmail);
-  }
-}, [isLoaded, user]);
+    const userEmail = user.primaryEmailAddress?.emailAddress;
+    if (userEmail) {
+      AsyncStorage.setItem("email", userEmail);
+    }
+  }, [isLoaded, user]);
 
   return (
     <View
@@ -95,40 +111,39 @@ const CompleteYourAccountScreen = () => {
       ]}
     >
       <View style={styles.headingContainer}>
-        <Text style={styles.label}>Complete your account</Text>
+        <Text style={styles.label}>Hoàn tất thông tin tài khoản</Text>
         <Text style={styles.description}>
-          Complete your account to start your journey with thousands of
-          developers around the world.
+          Hãy hoàn tất thông tin để bắt đầu hành trình của bạn.
         </Text>
       </View>
 
       <View style={styles.formContainer}>
         <TextInput
           control={control}
-          placeholder="Enter your full name"
-          label="Full Name"
+          placeholder="Nhập họ và tên"
+          label="Họ và tên"
           required
           name="full_name"
         />
 
         <TextInput
           control={control}
-          placeholder="Enter your username"
-          label="Username"
+          placeholder="Nhập tên người dùng"
+          label="Tên người dùng"
           required
           name="username"
         />
 
         <RadioButtonInput
           control={control}
-          placeholder="Select your gender"
-          label="Gender"
+          placeholder="Chọn giới tính"
+          label="Giới tính"
           required
           name="gender"
           options={[
-            { label: "Male", value: "male" },
-            { label: "Female", value: "female" },
-            { label: "Other", value: "other" },
+            { label: "Nam", value: "male" },
+            { label: "Nữ", value: "female" },
+            { label: "Khác", value: "other" },
           ]}
         />
 
@@ -142,7 +157,7 @@ const CompleteYourAccountScreen = () => {
               <ActivityIndicator size="small" color="white" />
             ) : null}
             <Text style={styles.buttonText}>
-              {isLoading ? "Loading..." : "Complete Account"}
+              {isLoading ? "Đang xử lý..." : "Hoàn tất"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -186,7 +201,7 @@ const styles = StyleSheet.create({
   },
   button: {
     width: "100%",
-    backgroundColor: "blue",
+    backgroundColor: Colors.primary,
     padding: 10,
     borderRadius: 10,
     alignItems: "center",

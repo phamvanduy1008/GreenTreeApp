@@ -33,9 +33,9 @@ export default function AccountScreen() {
   const router = useRouter();
 
   const checkAuthentication = useCallback(async () => {
+    
     try {
       const userApi = await AsyncStorage.getItem("userData");
-      console.log("userApi", userApi);
 
       if (userApi || user) {
         setIsAuthenticated(true);
@@ -51,7 +51,9 @@ export default function AccountScreen() {
           };
 
           setAccountUser(newUserData as IUser);
+          
           await AsyncStorage.setItem("userData", JSON.stringify(newUserData));
+          
         }
       } else {
         setIsAuthenticated(false);
@@ -96,12 +98,21 @@ export default function AccountScreen() {
         {isAuthenticated ? (
           <View style={styles.profileSection}>
             <View style={styles.profileHeader}>
-            <Image
-                source={{
-                  uri: `${ipAddress}/images/profile/${accountUser?.profile.avatar}`,
-                }}
-                style={styles.profileImage}
-              />
+            {accountUser?.profile.avatar
+              ? (
+                  <Image
+                    source={{
+                      uri: accountUser.profile.avatar.startsWith("http")
+                        ? accountUser.profile.avatar
+                        : `${ipAddress}/images/profile/${accountUser.profile.avatar}`,
+                    }}
+                    style={styles.profileImage}
+                  />
+                )
+              : (
+                  <Ionicons name="person-circle-outline" size={39} color="#ccc" />
+                )
+            }
               <View style={styles.profileInfo}>
                 <Text style={styles.profileName}>
                   {accountUser?.profile.full_name || user?.fullName}
