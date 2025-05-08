@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, Alert, StyleSheet, Image, TouchableOpacity, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  Alert,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import { useRouter } from "expo-router";
 import Input from "@/app/components/common/Input";
 import Button from "@/app/components/common/Button";
@@ -11,17 +19,15 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
 
-
   const router = useRouter();
 
   const handleRegister = async () => {
-
-    if(!email || !password || !passwordConfirm){
+    if (!email || !password || !passwordConfirm) {
       Alert.alert("Lỗi", "Vui lòng điền đầy đủ thông tin!");
       return;
     }
 
-    if(password !== passwordConfirm){
+    if (password !== passwordConfirm) {
       Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp!");
       return;
     }
@@ -42,28 +48,25 @@ export default function Register() {
         Alert.alert("Thành công", "Đăng ký thành công!");
         router.push("/auth/login");
       } else {
-        Alert.alert("Lỗi", data.message || "Đăng ký thất bại, vui lòng thử lại sau.");
+        Alert.alert(
+          "Lỗi",
+          data.message || "Đăng ký thất bại, vui lòng thử lại sau."
+        );
       }
     } catch (error) {
       console.error(error);
       Alert.alert("Lỗi", "Có lỗi xảy ra, vui lòng thử lại sau.");
     }
-
   };
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.registerTitle}>Register</Text>
+      <Text style={styles.registerTitle}>Đăng ký</Text>
       <Text style={styles.registerText}>
-        It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum.
+        Hãy đăng ký tài khoản để trải nghiệm những tính năng thú vị và tuyệt vời
+        của app chúng tôi nhé{" "}
       </Text>
-      <View style={styles.dividerArea}>
-        <View style={styles.divider} />
-        <Text style={styles.orText}>Or</Text>
-        <View style={styles.divider} />
-      </View>
 
-     
       <Input
         type="login"
         placeholder="Email"
@@ -73,25 +76,30 @@ export default function Register() {
       />
       <Input
         type="password"
-        placeholder="Password"
+        placeholder="Mật khẩu"
         value={password}
         onChange={setPassword}
       />
-       <Input
+      <Input
         type="password"
-        placeholder="Confirm Password"
+        placeholder="Xác nhận mật khẩu"
         value={passwordConfirm}
         onChange={setPasswordConfirm}
-        inputStyles={{marginTop:20}}
+        inputStyles={{ marginTop: 20 }}
       />
-      
+
       <Button buttonStyle={styles.btnToRegister} onClick={handleRegister}>
-        <Text style={styles.btnToRegisterText}>Register</Text>
+        <Text style={styles.btnToRegisterText}>Đăng ký</Text>
       </Button>
       <Text style={styles.accountText}>
-        Already have an account?{" "}
-        <Text style={styles.link} onPress={() => { router.push("/auth/login"); }}>
-          Login
+        Đã có tài khoản?{" "}
+        <Text
+          style={styles.link}
+          onPress={() => {
+            router.push("/auth/login");
+          }}
+        >
+          Đăng nhập
         </Text>
       </Text>
     </ScrollView>
@@ -123,13 +131,13 @@ const styles = StyleSheet.create({
   },
   buttonArea: {
     flexDirection: "row",
-    justifyContent: "center", 
-    alignItems:"center",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 20,
-    width:'100%',
-    height:80,
-    gap:20,
-    padding:10,
+    width: "100%",
+    height: 80,
+    gap: 20,
+    padding: 10,
   },
   btnStyle: {
     flex: 1,
@@ -137,7 +145,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 10,
-    width:160,
+    width: 160,
   },
   image: {
     width: 30,

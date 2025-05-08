@@ -44,14 +44,28 @@ const Login = () => {
 
       const data = await response.json();
 
+      
       if (response.ok && data.success && data.user) {
         // Lưu userId, email và userData vào AsyncStorage
         await AsyncStorage.setItem("userId", data.user._id); // Lưu userId
         await AsyncStorage.setItem("email", email);
         await AsyncStorage.setItem("userData", JSON.stringify(data.user));
 
+        try {
+          const userId = await AsyncStorage.getItem("userId");
+          const email = await AsyncStorage.getItem("email");
+          const userDataString = await AsyncStorage.getItem("userData");
+          const userData = userDataString ? JSON.parse(userDataString) : null;
+      
+          console.log("userId:", userId);
+          console.log("email:", email);
+          console.log("userData:", userData);
+        } catch (error) {
+          console.error("Lỗi khi tải dữ liệu người dùng:", error);
+        }
+        
         Alert.alert("Đăng nhập thành công!");
-
+        
         // Điều hướng sau khi lưu trữ hoàn tất
         if (data.user.onboarding_completed === 0) {
           router.push("/auth/complete-your-account");

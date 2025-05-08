@@ -1,8 +1,9 @@
 
 # MyApp – React Native với Expo
 
+![MyApp Logo](https://example.com/logo.png)
 
-MyApp là một ứng dụng di động đa nền tảng (iOS, Android) được phát triển bằng **React Native** và **Expo**. Dự án xây dựng giao diện người dùng hiện đại, dễ mở rộng.
+MyApp là một ứng dụng di động đa nền tảng (iOS, Android) được phát triển bằng **React Native** và **Expo**. Dự án sử dụng **file-based routing** để xây dựng giao diện người dùng hiện đại, dễ mở rộng.
 
 ---
 

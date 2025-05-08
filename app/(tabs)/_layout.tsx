@@ -45,9 +45,12 @@ import { ipAddress } from "../constants/ip";
   
       return () => clearInterval(interval);
     }, [storageOk]);
+
   
     useEffect(() => {
+
       const initAuth = async () => {
+
         if (!isClerkLoaded || !user || !storageOk) return;
   
         try {
@@ -90,7 +93,6 @@ import { ipAddress } from "../constants/ip";
   
   return (
     <Tabs
-    initialRouteName="shop" 
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,

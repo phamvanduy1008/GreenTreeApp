@@ -28,11 +28,53 @@ const ProductDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [categoryName, setCategoryName] = useState<string>('Không xác định');
+  const [userId, setUserId] = useState<string>('');
   const [heart, setHeart] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [isLoginModalVisible, setLoginModalVisible] = useState(false);
 
+
   useEffect(() => {
+    const fetchUserIdAndCheckFavorite = async () => {
+      const userData = await AsyncStorage.getItem("userData");
+      console.log("userData raw:", userData);
+      if (userData) {
+        const user = JSON.parse(userData);
+        console.log("user parsed:", user);
+  
+        if (user._id) {
+          setUserId(user._id);
+          console.log("user id:", user._id);
+  
+          try {
+            const response = await fetch(`${ipAddress}/api/favourites/${user._id}`);
+            if (!response.ok) throw new Error('Không thể lấy danh sách yêu thích');
+            
+            const favouriteData = await response.json();
+            if (
+              favouriteData &&
+              favouriteData.products &&
+              favouriteData.products.some((product: Products) => product._id === id)
+            ) {
+              setHeart(true);
+            } else {
+              setHeart(false);
+            }
+          } catch (err) {
+            console.error('Lỗi khi kiểm tra sản phẩm trong danh sách yêu thích:', err);
+          }
+        }
+      } else {
+        console.log("Không có userData trong AsyncStorage");
+      }
+    };
+  
+    fetchUserIdAndCheckFavorite();
+  }, []);
+  
+  
+
+  useEffect(() => {  
     const fetchProductDetails = async () => {
       try {
         const response = await fetch(`${ipAddress}/api/products/${id}`);
@@ -61,13 +103,8 @@ const ProductDetail = () => {
     };
 
     const checkIfFavorited = async () => {
+      if(!userId) return;
       try {
-        const userData = await AsyncStorage.getItem('userData');
-        if (!userData) return;
-
-        const user = JSON.parse(userData);
-        const userId = user._id;
-
         const response = await fetch(`${ipAddress}/api/favourites/${userId}`);
         
         if (!response.ok) {
@@ -105,15 +142,7 @@ const ProductDetail = () => {
     if (!product || product.status === 'out_of_stock') return;
 
     try {
-      const userData = await AsyncStorage.getItem('userData');
-      if (!userData) {
-        setLoginModalVisible(true);
-        return;
-      }
-
-      const user = JSON.parse(userData);
-      const userId = user._id;
-
+      if(!userId) return;
       const response = await fetch(`${ipAddress}/api/cart`, {
         method: 'POST',
         headers: {
@@ -140,13 +169,7 @@ const ProductDetail = () => {
 
   const handleAddToFavourite = async () => {
     try {
-      const userData = await AsyncStorage.getItem('userData');
-      if (!userData) {
-        setLoginModalVisible(true);
-        return;
-      }
-      const user = JSON.parse(userData);
-      const userId = user._id;
+      if(!userId) return;
 
       if (!heart) {
         const response = await fetch(`${ipAddress}/api/favourites`, {

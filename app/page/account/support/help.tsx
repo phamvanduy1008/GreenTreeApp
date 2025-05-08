@@ -15,7 +15,7 @@ import { useRouter } from "expo-router";
 
 const PRIMARY_COLOR = Colors.primary;
 type PagePath =
-  | "../page/account/support/contact"
+  | "../../message/message"
   | "./policy"
   | "../acc/order";
 
@@ -79,7 +79,7 @@ export default function SupportScreen() {
           <Text style={styles.sectionTitle}>Liên kết nhanh</Text>
           <TouchableOpacity
             style={styles.linkItem}
-            onPress={() => navigateToPage("../page/account/support/contact")}
+            onPress={() => navigateToPage("../../message/message")}
           >
             <View style={styles.linkIconContainer}>
               <Ionicons name="chatbubble-ellipses-outline" size={22} color={PRIMARY_COLOR} />
