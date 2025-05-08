@@ -10,11 +10,14 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  Modal,
+  FlatList,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ipAddress } from "@/app/constants/ip";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { places } from "../../constants/places";
 
 const AddAddress = () => {
   const router = useRouter();
@@ -25,13 +28,14 @@ const AddAddress = () => {
   const [district, setDistrict] = useState("");
   const [city, setCity] = useState("");
   const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState<"city" | "district" | "ward" | null>(null);
+  const [modalItems, setModalItems] = useState<string[]>([]);
 
   const handleGoBack = () => {
     router.back();
   };
 
   const handleAddAddress = async () => {
-    // Kiểm tra các trường bắt buộc
     if (!name || !phone || !address) {
       Alert.alert(
         "Lỗi",
@@ -64,7 +68,6 @@ const AddAddress = () => {
 
       const data = await response.json();
       if (data.success) {
-        // Thay vì router.back(), sử dụng router.replace để quay lại và làm mới
         router.replace({
           pathname: "./address_delivery",
           params: { refresh: "true" },
@@ -82,6 +85,42 @@ const AddAddress = () => {
       setLoading(false);
     }
   };
+
+  const openModal = (type: "city" | "district" | "ward") => {
+    let items: string[] = [];
+    if (type === "city") {
+      items = ["Đà Nẵng"];
+    } else if (type === "district" && city && places[city]) {
+      items = Object.keys(places[city]);
+    } else if (type === "ward" && city && district && places[city]?.[district]) {
+      items = places[city][district];
+    }
+    setModalItems(items);
+    setModalVisible(type);
+  };
+
+  const handleSelect = (item: string) => {
+    if (modalVisible === "city") {
+      setCity(item);
+      setDistrict("");
+      setWard("");
+    } else if (modalVisible === "district") {
+      setDistrict(item);
+      setWard("");
+    } else if (modalVisible === "ward") {
+      setWard(item);
+    }
+    setModalVisible(null);
+  };
+
+  const renderModalItem = ({ item }: { item: string }) => (
+    <TouchableOpacity
+      style={styles.modalItem}
+      onPress={() => handleSelect(item)}
+    >
+      <Text style={styles.itemText}>{item}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <>
@@ -139,37 +178,42 @@ const AddAddress = () => {
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Phường/Xã</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập phường/xã"
-                value={ward}
-                onChangeText={setWard}
-                placeholderTextColor="#999999"
-                returnKeyType="next"
-              />
+              <Text style={styles.label}>Tỉnh/Thành phố *</Text>
+              <TouchableOpacity
+                style={styles.selectField}
+                onPress={() => openModal("city")}
+              >
+                <Text style={styles.selectText}>
+                  {city || "Chọn tỉnh/thành phố"}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color="#333" />
+              </TouchableOpacity>
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Quận/Huyện</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập quận/huyện"
-                value={district}
-                onChangeText={setDistrict}
-                placeholderTextColor="#999999"
-                returnKeyType="next"
-              />
+              <Text style={styles.label}>Quận/Huyện *</Text>
+              <TouchableOpacity
+                style={[styles.selectField, !city && styles.disabled]}
+                onPress={() => openModal("district")}
+                disabled={!city}
+              >
+                <Text style={styles.selectText}>
+                  {district || "Chọn quận/huyện"}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color="#333" />
+              </TouchableOpacity>
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Tỉnh/Thành phố</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập tỉnh/thành phố"
-                value={city}
-                onChangeText={setCity}
-                placeholderTextColor="#999999"
-                returnKeyType="done"
-              />
+              <Text style={styles.label}>Phường/Xã *</Text>
+              <TouchableOpacity
+                style={[styles.selectField, !district && styles.disabled]}
+                onPress={() => openModal("ward")}
+                disabled={!district}
+              >
+                <Text style={styles.selectText}>
+                  {ward || "Chọn phường/xã"}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color="#333" />
+              </TouchableOpacity>
             </View>
             <TouchableOpacity
               style={[styles.saveButton, loading && styles.saveButtonDisabled]}
@@ -182,6 +226,38 @@ const AddAddress = () => {
             </TouchableOpacity>
           </View>
         </ScrollView>
+
+        {/* Modal Selection */}
+        <Modal
+          visible={!!modalVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setModalVisible(null)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>
+                {modalVisible === "city"
+                  ? "Chọn tỉnh/thành phố"
+                  : modalVisible === "district"
+                  ? "Chọn quận/huyện"
+                  : "Chọn phường/xã"}
+              </Text>
+              <FlatList
+                data={modalItems}
+                renderItem={renderModalItem}
+                keyExtractor={(item) => item}
+                style={styles.modalList}
+              />
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setModalVisible(null)}
+              >
+                <Text style={styles.buttonText}>Đóng</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </>
   );
@@ -244,6 +320,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E0E0E0",
   },
+  selectField: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+  },
+  selectText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  disabled: {
+    backgroundColor: "#F0F0F0",
+    borderColor: "#DDD",
+  },
   saveButton: {
     backgroundColor: "#53B175",
     borderRadius: 8,
@@ -252,13 +347,56 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   saveButtonDisabled: {
-    backgroundColor: "#FF6B6B",
+    backgroundColor: "#53B175",
     opacity: 0.7,
   },
   saveButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    width: "80%",
+    maxHeight: "80%",
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#53B175",
+    marginBottom: 10,
+  },
+  modalList: {
+    maxHeight: 300,
+  },
+  modalItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEE",
+  },
+  itemText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  closeButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: "#53B175",
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

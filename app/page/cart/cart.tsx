@@ -231,68 +231,73 @@ const Cart = () => {
 
   return (
     <View style={styles.container}>
-    <View style={styles.header}>
-    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-      <Ionicons name="chevron-back" size={24} color={Colors.text} />
-    </TouchableOpacity>
-    <View style={styles.headerCenter}>
-      <Text style={styles.headerTitle}>Giỏ hàng của bạn</Text>
-    </View>
-    <TouchableOpacity   onPress={() => router.push("../message/message")} style={styles.cartIcon}>
-      <Ionicons name="chatbubble-outline" size={20} color={Colors.white} />
-    </TouchableOpacity>
-  </View>
-
-    <View style={styles.main}>
-      
-      {cartItems.length === 0 ? (
-        <Text style={styles.empty}>Giỏ hàng của bạn trống.</Text>
-      ) : (
-        <View style={{ flex: 1 }}>
-          <TouchableOpacity
-            style={styles.checkbox__container}
-            onPress={toggleSelectAll}
-          >
-            <Ionicons
-              name={selectAll ? "checkbox" : "square-outline"}
-              size={24}
-              color={Colors.primary}
-            />
-            <Text style={styles.checkbox__text}>Chọn tất cả</Text>
-          </TouchableOpacity>
-          <FlatList
-            data={cartItems}
-            renderItem={renderItem}
-            keyExtractor={(item: CartItem) => item._id}
-            contentContainerStyle={{ paddingBottom: 100 }}
-          />
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={24} color={Colors.text} />
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Giỏ hàng của bạn</Text>
         </View>
-      )}
-      <TouchableOpacity
-        style={[
-          styles.checkout__button,
-          selectedItems.length === 0 && { opacity: 0.5 },
-        ]}
-        disabled={selectedItems.length === 0}
-        onPress={() => {
-          if (selectedItems.length > 0) {
-            const selectedCartItems = cartItems.filter((item) =>
-              selectedItems.includes(item._id)
-            );
-            router.push({
-              pathname: "../payment/payment",
-              params: {
-                selectedItems: JSON.stringify(selectedCartItems),
-                totalPrice: totalPrice.toString(),
-              },
-            });
-          }
-        }}
-      >
-        <Text style={styles.checkout__text}>Đi đến thanh toán</Text>
-        <Text style={styles.checkout__price}>{formatPrice(totalPrice)} ₫</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity onPress={() => router.push("../message/message")} style={styles.cartIcon}>
+          <Ionicons name="chatbubble-outline" size={20} color={Colors.white} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.main}>
+
+        {cartItems.length === 0 ? (
+          <Text style={styles.empty}>Giỏ hàng của bạn trống.</Text>
+        ) : (
+          <View style={{ flex: 1 }}>
+            <TouchableOpacity
+              style={styles.checkbox__container}
+              onPress={toggleSelectAll}
+            >
+              <Ionicons
+                name={selectAll ? "checkbox" : "square-outline"}
+                size={24}
+                color={Colors.primary}
+              />
+              <Text style={styles.checkbox__text}>Chọn tất cả</Text>
+            </TouchableOpacity>
+            <FlatList
+              data={cartItems}
+              renderItem={renderItem}
+              keyExtractor={(item: CartItem) => item._id}
+              contentContainerStyle={{ paddingBottom: 100 }}
+            />
+          </View>
+        )}
+        <TouchableOpacity
+          style={[
+            styles.checkout__button,
+            selectedItems.length === 0 && { opacity: 0.5 },
+          ]}
+          disabled={selectedItems.length === 0}
+          onPress={() => {
+            if (selectedItems.length > 0) {
+              const selectedCartItems = cartItems.filter((item) =>
+                selectedItems.includes(item._id)
+              );
+              AsyncStorage.setItem("checkoutData", JSON.stringify({
+                selectedItems: selectedCartItems,
+                totalPrice: totalPrice,
+              }));
+
+              router.push({
+                pathname: "../payment/payment",
+                params: {
+                  selectedItems: JSON.stringify(selectedCartItems),
+                  totalPrice: totalPrice.toString(),
+                },
+              });
+            }
+          }}
+        >
+          <Text style={styles.checkout__text}>Đi đến thanh toán</Text>
+          <Text style={styles.checkout__price}>{formatPrice(totalPrice)} ₫</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -302,43 +307,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  main:{
+  main: {
     flex: 1,
-    paddingHorizontal:15
+    paddingHorizontal: 15
   },
   header: {
-     paddingTop: 50,
-     flexDirection: "row",
-     justifyContent: "space-between",
-     alignItems: "center",
-     backgroundColor: Colors.white,
-     paddingVertical: 16,
-     paddingHorizontal: 20,
-     shadowColor: "#000",
-     shadowOffset: { width: 0, height: 1 },
-     shadowOpacity: 0.08,
-     shadowRadius: 2,
-     elevation: 3,
-     zIndex: 10,
-     marginBottom:10
-   },
-   backButton: {
-     padding: 6,
-     borderRadius: 20,
-     backgroundColor: Colors.background,
-   },
-   headerCenter: {
-     flex: 1,
-     alignItems: "center",
-   },
-   headerTitle: {
-     fontSize: 18,
-     fontWeight: "600",
-     color: Colors.text,
-     textAlign: "center",
-     letterSpacing: 0.3,
-   },
-   cartIcon: {
+    paddingTop: 50,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: Colors.white,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 3,
+    zIndex: 10,
+    marginBottom: 10
+  },
+  backButton: {
+    padding: 6,
+    borderRadius: 20,
+    backgroundColor: Colors.background,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: Colors.text,
+    textAlign: "center",
+    letterSpacing: 0.3,
+  },
+  cartIcon: {
     padding: 8,
     backgroundColor: Colors.primary,
     borderRadius: 20,
