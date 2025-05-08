@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   Button,
 } from "react-native";
@@ -134,17 +133,17 @@ export default function AccountSecurityScreen() {
 
   if (loading || isLoggedIn === null) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#F05A22" />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!isLoggedIn) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
             Người dùng chưa đăng nhập, chưa có thông tin người dùng. Hãy đăng
@@ -152,7 +151,7 @@ export default function AccountSecurityScreen() {
           </Text>
           <Button title="Đăng nhập" onPress={() => handleNavigate("Login")} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import {
-  View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+  View,
   ImageBackground,
   TextInput,
   KeyboardAvoidingView,
@@ -238,29 +237,29 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.loadingContainer}>
           <Text>Đang tải thông tin...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity onPress={handleGoBack}>
             <Text style={styles.retryText}>Quay lại</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -381,7 +380,7 @@ export default function ProfileScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -471,6 +470,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
+    marginTop: 50,
   },
   headerTitle: {
     flex: 1,

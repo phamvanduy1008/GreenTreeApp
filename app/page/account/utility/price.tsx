@@ -11,7 +11,6 @@ import { router } from "expo-router";
 import { Colors } from "../../../constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { ipAddress } from "../../../constants/ip";
-import { LinearGradient } from "expo-linear-gradient";
 
 interface Category {
   _id: string;
@@ -25,7 +24,7 @@ interface Plant {
   name: string;
   avgPriceYesterday: number;
   avgPriceNow: number;
-  category: string;
+  category: Category;
 }
 
 interface GroupedPlant {
@@ -53,29 +52,47 @@ const Price = () => {
   const fetchData = async () => {
     try {
       setIsRefreshing(true);
+      console.log("Bắt đầu lấy dữ liệu từ API...");
+  
       const categoriesResponse = await fetch(`${ipAddress}/api/categories`);
+      if (!categoriesResponse.ok) {
+        throw new Error(`Lỗi khi lấy danh mục: ${categoriesResponse.status}`);
+      }
       const categories: Category[] = await categoriesResponse.json();
-
+      console.log("Danh mục nhận được:", categories);
+  
       const plantsResponse = await fetch(`${ipAddress}/api/plants`);
+      if (!plantsResponse.ok) {
+        throw new Error(`Lỗi khi lấy cây trồng: ${plantsResponse.status}`);
+      }
       const plants: Plant[] = await plantsResponse.json();
-
+      console.log("Cây trồng nhận được:", plants);
+  
       const grouped = categories.map((category) => {
-        const plantsInCategory = plants.filter(
-          (plant) => plant.category === category._id
-        );
+        const plantsInCategory = plants.filter((plant) => {
+          const isMatch = plant.category._id === category._id;
+          console.log(
+            `So sánh plant.category._id (${plant.category._id}) với category._id (${category._id}): ${isMatch}`
+          );
+          return isMatch;
+        });
+        console.log(`Danh mục ${category.name} có ${plantsInCategory.length} cây trồng`);
         return {
           categoryName: category.name,
           categoryId: category._id,
           plants: plantsInCategory,
         };
       });
-
+  
       const filteredGrouped = grouped.filter((group) => group.plants.length > 0);
+      console.log("Danh mục sau khi lọc (có cây trồng):", filteredGrouped);
+  
       setGroupedPlants(filteredGrouped);
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu:", error);
     } finally {
       setIsRefreshing(false);
+      console.log("Hoàn tất quá trình lấy dữ liệu");
     }
   };
 

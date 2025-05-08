@@ -73,7 +73,7 @@ const AddressDelivery = () => {
   }, [params.refresh, router]);
 
   const handleGoBack = () => {
-    router.push("/(tabs)/account");
+    router.back();
   };
 
   const handleAddAddress = () => {
@@ -101,27 +101,18 @@ const AddressDelivery = () => {
 
   const handleSelectAddress = async (address: Address) => {
     try {
-      const userData = await AsyncStorage.getItem("userData");
-      if (!userData) {
-        setError("Bạn cần đăng nhập để chọn địa chỉ.");
-        return;
-      }
-
-      const user = JSON.parse(userData);
-      const updatedAddress = `${address.address}, ${address.ward}, ${address.district}, ${address.city}`;
-      const updatedUserData = {
-        ...user,
-        profile: {
-          ...user.profile,
-          full_name: address.name,
-          phone: address.phone,
-          address: updatedAddress,
-        },
+        const updatedAddress = {
+        fullName: address.name,
+        phone: address.phone,
+        street: address.address,
+        city: address.city,
+        district:address.district ,
+        ward: address.ward,
       };
-
-      await AsyncStorage.setItem("userData", JSON.stringify(updatedUserData));
-
-      if (params.fromPayment === "true") {
+    
+      await AsyncStorage.setItem("address", JSON.stringify(updatedAddress));
+      console.log("updatedAddress",updatedAddress);
+      if (updatedAddress) {
         router.replace({
           pathname: "../payment/payment",
           params: {

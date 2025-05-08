@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ImageBackground,
   Image,
+  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { Colors } from "../constants/Colors";
@@ -228,12 +229,12 @@ const Home: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll__content}
       >
-        <View style={styles.container}>
+        <View style={styles.header_container}>
           <View style={styles.header}>
             <Text style={styles.header__title}>Chăm sóc cây trồng</Text>
           </View>
@@ -243,7 +244,7 @@ const Home: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -252,6 +253,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
+  },
+  header_container:{
+    flex: 1,
   },
   scroll__content: {
     flexGrow: 1,
@@ -273,6 +277,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    marginTop: Platform.OS === 'ios'? 50 : 40,
   },
   header__title: {
     fontSize: 24,

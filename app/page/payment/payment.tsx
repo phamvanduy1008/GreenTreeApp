@@ -12,12 +12,12 @@ import {
   Platform,
   StatusBar,
   Linking,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Colors } from "../../constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { places } from "../../constants/places";
 import { ipAddress } from "../../constants/ip";
 
 interface Product {
@@ -60,7 +60,6 @@ const Payment = () => {
   const [totalQuantity, setTotalQuantity] = useState<number>(0);
   const [shippingFee, setShippingFee] = useState<number>(0);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editedFullName, setEditedFullName] = useState<string>("");
   const [editedPhone, setEditedPhone] = useState<string>("");
   const [editedStreet, setEditedStreet] = useState<string>("");
@@ -68,18 +67,23 @@ const Payment = () => {
   const [selectedDistrict, setSelectedDistrict] = useState<string>("");
   const [selectedWard, setSelectedWard] = useState<string>("");
   const [momoId, setMomoId] = useState<string>("");
-  const [modalVisible, setModalVisible] = useState<
-    "city" | "district" | "ward" | null
-  >(null);
-  const [model__items, setmodel__items] = useState<string[]>([]);
+  const [modalVisible, setModalVisible] = useState<"city" | "district" | "ward" | null>(null);
+  const [modelItems, setModelItems] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [calculatedTotalPrice, setCalculatedTotalPrice] = useState<number>(0);
 
   const formatPrice = (price: number) => {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
+  // Load user data and address from AsyncStorage
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchUserDataAndAddress = async () => {
       try {
+        setIsLoading(true);
+
+        // Load user data
         const storedUserData = await AsyncStorage.getItem("userData");
         if (storedUserData) {
           const parsedUserData = JSON.parse(storedUserData);
@@ -87,51 +91,90 @@ const Payment = () => {
           setEditedFullName(parsedUserData.profile.full_name);
           setEditedPhone(parsedUserData.profile.phone);
         } else {
-          console.error("Không tìm thấy userData trong AsyncStorage");
+          setError("Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.");
+        }
+
+        // Load address
+        const storedAddress = await AsyncStorage.getItem("address");
+        if (storedAddress) {
+          const parsedAddress = JSON.parse(storedAddress);
+          setEditedFullName(parsedAddress.fullName || "");
+          setEditedPhone(parsedAddress.phone || "");
+          setEditedStreet(parsedAddress.street || "");
+          setSelectedCity(parsedAddress.city || "Đà Nẵng");
+          setSelectedDistrict(parsedAddress.district || "");
+          setSelectedWard(parsedAddress.ward || "");
         }
       } catch (error) {
-        console.error(
-          "Lỗi khi lấy thông tin người dùng từ AsyncStorage:",
-          error
-        );
+        console.error("Lỗi khi tải dữ liệu từ AsyncStorage:", error);
+        setError("Đã xảy ra lỗi khi tải thông tin. Vui lòng thử lại.");
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchUserData();
+
+    fetchUserDataAndAddress();
   }, []);
 
+  // Load cart items and calculate totalPrice
   useEffect(() => {
-    if (selectedItems) {
-      const parsedItems: CartItem[] = JSON.parse(selectedItems as string);
-      setCartItems(parsedItems);
-      const quantity = parsedItems.reduce(
-        (sum, item) => sum + item.quantity,
-        0
-      );
-      setTotalQuantity(quantity);
+    const loadCartItems = async () => {
+      try {
+        let items: CartItem[] = [];
+        let price: number = 0;
 
-      let fee = 0;
-      if (quantity < 20) {
-        fee = 20000;
-      } else if (quantity < 30) {
-        fee = 30000;
-      } else if (quantity < 40) {
-        fee = 40000;
-      } else if (quantity < 50) {
-        fee = 50000;
-      } else {
-        fee = 60000;
+        // Try to load from params first
+        if (selectedItems && totalPrice) {
+          items = JSON.parse(selectedItems as string);
+          price = Number(totalPrice) || 0;
+        } else {
+          // Fallback to AsyncStorage
+          const checkoutData = await AsyncStorage.getItem("checkoutData");
+          if (checkoutData) {
+            const parsedData = JSON.parse(checkoutData);
+            items = parsedData.selectedItems || [];
+            price = Number(parsedData.totalPrice) || 0;
+          } else {
+            setError("Không tìm thấy thông tin đơn hàng. Vui lòng quay lại giỏ hàng.");
+            return;
+          }
+        }
+
+        setCartItems(items);
+
+        // Calculate totalPrice from cartItems if price is NaN or 0
+        if (isNaN(price) || price === 0) {
+          price = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+        }
+        setCalculatedTotalPrice(price);
+
+        const quantity = items.reduce((sum, item) => sum + item.quantity, 0);
+        setTotalQuantity(quantity);
+
+        // Calculate shipping fee
+        let fee = 0;
+        if (quantity < 20) fee = 20000;
+        else if (quantity < 30) fee = 30000;
+        else if (quantity < 40) fee = 40000;
+        else if (quantity < 50) fee = 50000;
+        else fee = 60000;
+        setShippingFee(fee);
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu giỏ hàng:", error);
+        setError("Đã xảy ra lỗi khi tải đơn hàng. Vui lòng thử lại.");
       }
-      setShippingFee(fee);
-    }
-  }, [selectedItems]);
+    };
+
+    loadCartItems();
+  }, [selectedItems, totalPrice]);
 
   const handleSelectAddress = () => {
     router.push({
       pathname: "../address/address_delivery",
       params: {
         fromPayment: "true",
-        selectedItems,
-        totalPrice,
+        selectedItems: selectedItems || JSON.stringify(cartItems),
+        totalPrice: (totalPrice || calculatedTotalPrice).toString(),
         fullName: editedFullName,
         phone: editedPhone,
         street: editedStreet,
@@ -158,28 +201,26 @@ const Payment = () => {
 
   const checkTransactionStatus = async (orderId: string) => {
     if (!userData) {
-      alert("Không tìm thấy thông tin người dùng");
+      Alert.alert("Lỗi", "Không tìm thấy thông tin người dùng.");
       return;
     }
+
     const startTime = Date.now();
-    const timeout = 5 * 60 * 1000; 
-    const interval = 10 * 1000; 
+    const timeout = 5 * 60 * 1000; // 5 minutes
+    const interval = 10 * 1000; // Check every 10 seconds
 
     const intervalId = setInterval(async () => {
       try {
-        const response = await fetch(
-          `${ipAddress}/check-status-transaction`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ orderId }),
-          }
-        );
+        const response = await fetch(`${ipAddress}/check-status-transaction`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId }),
+        });
 
         const result = await response.json();
 
         if (result.resultCode === 0) {
-          // Thanh toán thành công
+          // Payment successful
           clearInterval(intervalId);
           const orderData = {
             userId: userData._id,
@@ -189,11 +230,11 @@ const Payment = () => {
               price: item.product.price,
             })),
             paymentMethod: paymentMethod,
-            name: userData.profile.full_name,
-            address: userData.profile.address,
-            phone: userData.profile.phone,
+            name: editedFullName,
+            address: `${editedStreet}, ${selectedWard}, ${selectedDistrict}, ${selectedCity}`,
+            phone: editedPhone,
             fee: shippingFee,
-            total_price: Number(totalPrice) + shippingFee,
+            total_price: calculatedTotalPrice + shippingFee,
             momoId: orderId,
           };
 
@@ -225,32 +266,35 @@ const Payment = () => {
               })
             );
 
+            // Clear checkout data
+            await AsyncStorage.removeItem("checkoutData");
             router.push("/popup/success/success");
           } else {
             const errorData = await orderResponse.json();
-            alert(errorData.message || "Lưu đơn hàng thất bại.");
+            Alert.alert("Lỗi", errorData.message || "Lưu đơn hàng thất bại.");
           }
         } else if (Date.now() - startTime >= timeout) {
-          // Hết thời gian 5 phút
           clearInterval(intervalId);
-          alert("Thời gian xác nhận thanh toán đã hết. Vui lòng thử lại.");
+          Alert.alert("Lỗi", "Thời gian xác nhận thanh toán đã hết. Vui lòng thử lại.");
         }
       } catch (error) {
         console.error("Lỗi khi kiểm tra trạng thái giao dịch:", error);
         if (Date.now() - startTime >= timeout) {
           clearInterval(intervalId);
-          alert("Thời gian xác nhận thanh toán đã hết. Vui lòng thử lại.");
+          Alert.alert("Lỗi", "Thời gian xác nhận thanh toán đã hết. Vui lòng thử lại.");
         }
       }
     }, interval);
+
     return () => clearInterval(intervalId);
   };
 
-  const handelMomo = async () => {
+  const handleMomo = async () => {
     if (!userData) {
-      alert("Không tìm thấy thông tin người dùng");
+      Alert.alert("Lỗi", "Không tìm thấy thông tin người dùng.");
       return;
     }
+
     try {
       const orderData = {
         userId: userData._id,
@@ -260,12 +304,13 @@ const Payment = () => {
           price: item.product.price,
         })),
         paymentMethod: paymentMethod,
-        name: userData.profile.full_name,
-        address: userData.profile.address,
-        phone: userData.profile.phone,
+        name: editedFullName,
+        address: `${editedStreet}, ${selectedWard}, ${selectedDistrict}, ${selectedCity}`,
+        phone: editedPhone,
         fee: shippingFee,
-        total_price: Number(totalPrice) + shippingFee,
+        total_price: calculatedTotalPrice + shippingFee,
       };
+
       const response = await fetch(`${ipAddress}/payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -282,24 +327,29 @@ const Payment = () => {
             await AsyncStorage.setItem("pendingMomoOrderId", momoData.orderId);
             checkTransactionStatus(momoData.orderId);
           } else {
-            alert("Không thể mở liên kết thanh toán MoMo. Vui lòng thử lại.");
+            Alert.alert("Lỗi", "Không thể mở liên kết thanh toán MoMo. Vui lòng thử lại.");
           }
         } else {
-          alert("Không nhận được liên kết thanh toán từ MoMo.");
+          Alert.alert("Lỗi", "Không nhận được liên kết thanh toán từ MoMo.");
         }
       } else {
         const errorData = await response.json();
-        alert(errorData.message || "Đặt hàng thất bại. Vui lòng thử lại.");
+        Alert.alert("Lỗi", errorData.message || "Đặt hàng thất bại. Vui lòng thử lại.");
       }
     } catch (error) {
       console.error("Lỗi khi thanh toán qua MoMo:", error);
-      alert("Có lỗi xảy ra khi thanh toán qua MoMo. Vui lòng thử lại.");
+      Alert.alert("Lỗi", "Có lỗi xảy ra khi thanh toán qua MoMo. Vui lòng thử lại.");
     }
   };
 
-  const handelPay = async () => {
+  const handlePay = async () => {
     if (!userData) {
-      alert("Không tìm thấy thông tin người dùng");
+      Alert.alert("Lỗi", "Không tìm thấy thông tin người dùng.");
+      return;
+    }
+
+    if (!editedFullName || !editedPhone || !editedStreet || !selectedWard || !selectedDistrict || !selectedCity) {
+      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin địa chỉ.");
       return;
     }
 
@@ -312,11 +362,11 @@ const Payment = () => {
           price: item.product.price,
         })),
         paymentMethod: paymentMethod,
-        name: userData.profile.full_name,
-        address: userData.profile.address,
-        phone: userData.profile.phone,
+        name: editedFullName,
+        address: `${editedStreet}, ${selectedWard}, ${selectedDistrict}, ${selectedCity}`,
+        phone: editedPhone,
         fee: shippingFee,
-        total_price: Number(totalPrice) + shippingFee,
+        total_price: calculatedTotalPrice + shippingFee,
       };
 
       const response = await fetch(`${ipAddress}/api/sellers`, {
@@ -347,14 +397,16 @@ const Payment = () => {
           })
         );
 
+        // Clear checkout data
+        await AsyncStorage.removeItem("checkoutData");
         router.push("/popup/success/success");
       } else {
         const errorData = await response.json();
-        alert(errorData.message || "Đặt hàng thất bại. Vui lòng thử lại.");
+        Alert.alert("Lỗi", errorData.message || "Đặt hàng thất bại. Vui lòng thử lại.");
       }
     } catch (error) {
       console.error("Lỗi khi đặt hàng:", error);
-      alert("Có lỗi xảy ra. Vui lòng thử lại.");
+      Alert.alert("Lỗi", "Có lỗi xảy ra. Vui lòng thử lại.");
     }
   };
 
@@ -376,7 +428,7 @@ const Payment = () => {
     </View>
   );
 
-  const rendermodel__item = ({ item }: { item: string }) => (
+  const renderModelItem = ({ item }: { item: string }) => (
     <TouchableOpacity
       style={styles.modalItem}
       onPress={() => handleSelect(item)}
@@ -385,6 +437,28 @@ const Payment = () => {
       <Text style={styles.modalItemText}>{item}</Text>
     </TouchableOpacity>
   );
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+        <Text style={styles.loadingText}>Đang tải thông tin...</Text>
+      </View>
+    );
+  }
+
+  if (error || cartItems.length === 0) {
+    return (
+      <View style={styles.errorContainer}>
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+        <Ionicons name="alert-circle-outline" size={60} color={Colors.primary} />
+        <Text style={styles.errorText}>{error || "Không có sản phẩm để thanh toán."}</Text>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Text style={styles.backButtonText}>Quay lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -416,15 +490,15 @@ const Payment = () => {
           >
             <Text style={styles.addressText}>
               <Text style={styles.addressLabel}>Họ tên: </Text>
-              {userData?.profile.full_name || "Đang tải..."}
+              {editedFullName || "Đang tải..."}
             </Text>
             <Text style={styles.addressText}>
               <Text style={styles.addressLabel}>Địa chỉ: </Text>
-              {userData?.profile.address || "Đang tải..."}
+              {editedStreet ? `${editedStreet}, ${selectedWard}, ${selectedDistrict}, ${selectedCity}` : "Đang tải..."}
             </Text>
             <Text style={styles.addressText}>
               <Text style={styles.addressLabel}>Số điện thoại: </Text>
-              {userData?.profile.phone || "Đang tải..."}
+              {editedPhone || "Đang tải..."}
             </Text>
           </TouchableOpacity>
         </View>
@@ -448,9 +522,7 @@ const Payment = () => {
             activeOpacity={0.7}
           >
             <Ionicons
-              name={
-                paymentMethod === "cod" ? "radio-button-on" : "radio-button-off"
-              }
+              name={paymentMethod === "cod" ? "radio-button-on" : "radio-button-off"}
               size={20}
               color={Colors.primary}
             />
@@ -462,9 +534,7 @@ const Payment = () => {
             activeOpacity={0.7}
           >
             <Ionicons
-              name={
-                paymentMethod === "momo" ? "radio-button-on" : "radio-button-off"
-              }
+              name={paymentMethod === "momo" ? "radio-button-on" : "radio-button-off"}
               size={20}
               color={Colors.primary}
             />
@@ -478,7 +548,7 @@ const Payment = () => {
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Tổng tiền hàng</Text>
               <Text style={styles.detailValue}>
-                {formatPrice(Number(totalPrice))} ₫
+                {formatPrice(calculatedTotalPrice)} ₫
               </Text>
             </View>
             <View style={styles.detailRow}>
@@ -490,7 +560,7 @@ const Payment = () => {
             <View style={styles.paymentRowTotal}>
               <Text style={styles.paymentLabelTotal}>Tổng thanh toán:</Text>
               <Text style={styles.paymentValueTotal}>
-                {formatPrice(Number(totalPrice) + shippingFee)} ₫
+                {formatPrice(calculatedTotalPrice + shippingFee)} ₫
               </Text>
             </View>
           </View>
@@ -513,8 +583,8 @@ const Payment = () => {
                 : "Chọn phường/xã"}
             </Text>
             <FlatList
-              data={model__items}
-              renderItem={rendermodel__item}
+              data={modelItems}
+              renderItem={renderModelItem}
               keyExtractor={(item) => item}
               style={styles.modalList}
             />
@@ -532,7 +602,7 @@ const Payment = () => {
       {paymentMethod === "cod" ? (
         <TouchableOpacity
           style={styles.confirmButton}
-          onPress={handelPay}
+          onPress={handlePay}
           activeOpacity={0.7}
         >
           <Text style={styles.confirmText}>Xác nhận thanh toán</Text>
@@ -540,7 +610,7 @@ const Payment = () => {
       ) : (
         <TouchableOpacity
           style={styles.confirmButton}
-          onPress={handelMomo}
+          onPress={handleMomo}
           activeOpacity={0.7}
         >
           <Text style={styles.confirmText}>Thanh toán với ví MoMo</Text>
@@ -607,7 +677,9 @@ const styles = StyleSheet.create({
   addressContainer: {
     backgroundColor: Colors.white,
     borderRadius: 16,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop:20,
+    paddingBottom:5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
@@ -617,7 +689,7 @@ const styles = StyleSheet.create({
   addressText: {
     fontSize: 15,
     color: Colors.textSecondary,
-    marginBottom: 10,
+    paddingBottom: 15,
     lineHeight: 22,
   },
   addressLabel: {
@@ -827,7 +899,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 6,
-    marginBottom:10
+    marginBottom: 10,
   },
   confirmText: {
     color: Colors.white,
@@ -836,6 +908,41 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingVertical: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: Colors.white,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.text,
+    marginTop: 10,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: Colors.white,
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: Colors.text,
+    textAlign: "center",
+    marginTop: 10,
+  },
+  backButton: {
+    backgroundColor: Colors.primary,
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
+  },
+  backButtonText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
 
