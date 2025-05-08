@@ -142,7 +142,10 @@ const ProductDetail = () => {
     if (!product || product.status === 'out_of_stock') return;
 
     try {
-      if(!userId) return;
+      if (!userId) {
+        setLoginModalVisible(true); 
+        return;
+      }
       const response = await fetch(`${ipAddress}/api/cart`, {
         method: 'POST',
         headers: {
@@ -169,7 +172,10 @@ const ProductDetail = () => {
 
   const handleAddToFavourite = async () => {
     try {
-      if(!userId) return;
+      if (!userId) {
+        setLoginModalVisible(true); 
+        return;
+      }
 
       if (!heart) {
         const response = await fetch(`${ipAddress}/api/favourites`, {
