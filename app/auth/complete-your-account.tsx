@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -7,7 +8,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { set, useForm } from "react-hook-form";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { useEffect, useMemo, useState } from "react";
 
@@ -21,6 +22,7 @@ const CompleteYourAccountScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { email: emailFromParams } = useLocalSearchParams();
 
   const { control, handleSubmit, setError, setValue } = useForm({
     defaultValues: {
@@ -30,78 +32,108 @@ const CompleteYourAccountScreen = () => {
     },
   });
 
+  const getEmail = async (): Promise<string | null> => {
+    if (emailFromParams) {
+      return Array.isArray(emailFromParams) ? emailFromParams[0] : emailFromParams;
+    }
+    if (isLoaded && user?.primaryEmailAddress?.emailAddress) {
+      return user.primaryEmailAddress.emailAddress;
+    }
+    return await AsyncStorage.getItem("email");
+  };
+
+  useEffect(() => {
+    const initializeForm = async () => {
+      const email = await getEmail();
+      if (email) {
+        await AsyncStorage.setItem("email", email); 
+      }
+
+      if (isLoaded && user) {
+        setValue("full_name", user.fullName || "");
+        setValue("username", user.username || "");
+        setValue("gender", String(user.unsafeMetadata?.gender) || "");
+      }
+    };
+    initializeForm();
+  }, [isLoaded, user, emailFromParams]);
+
   const onSubmit = async (data: any) => {
     const { full_name, username, gender } = data;
 
     try {
       setIsLoading(true);
-      const emailApi = await AsyncStorage.getItem("email");
-      const emailClerk = user?.primaryEmailAddress?.emailAddress || "";
-      const email = emailApi || emailClerk;
 
-      await user?.update({
-        unsafeMetadata: {
-          full_name,
-          username,
-          gender,
-          onboarding_completed: true,
-        },
+      const email = await getEmail();
+      if (!email) {
+        setError("full_name", { message: "Không tìm thấy email để cập nhật" });
+        return;
+      }
+
+      const response = await fetch(`${ipAddress}/update-infor`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, full_name, username, gender }),
       });
 
-      if (email) {
-        const response = await fetch(`${ipAddress}/update-infor`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, full_name, username, gender }),
+      const responseData = await response.json();
+
+      if (!response.ok || !responseData.message.includes("thành công")) {
+        throw new Error(responseData.message || "Cập nhật thông tin thất bại");
+      }
+
+      const updatedUserData = {
+        _id: responseData.user._id || "",
+        email,
+        profile: {
+          full_name: responseData.user.profile.full_name || full_name,
+          username: responseData.user.profile.username || username,
+          gender: responseData.user.profile.gender || gender,
+          birthday: responseData.user.profile.birthday || null,
+          phone: responseData.user.profile.phone || "",
+          avatar: responseData.user.profile.avatar || "",
+        },
+        onboarding_completed: responseData.user.onboarding_completed || 1,
+        isActive: responseData.user.isActive ?? true,
+        isVerified: responseData.user.isVerified ?? false,
+        addresses: responseData.user.addresses || [],
+        createdAt: responseData.user.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      await AsyncStorage.multiSet([
+        ["userId", updatedUserData._id],
+        ["email", email],
+        ["userData", JSON.stringify(updatedUserData)],
+      ]);
+
+      if (isLoaded && user) {
+        await user.update({
+          unsafeMetadata: {
+            full_name,
+            username,
+            gender,
+            onboarding_completed: true,
+          },
         });
-
-        if (response.ok) {
-          await AsyncStorage.setItem("ok", "true");
-          const updatedUserData = {
-            email,
-            profile: {
-              full_name,
-              username,
-              gender,
-              birthday: null,
-              phone: "",
-              avatar: "",
-            },
-            onboarding_completed: 1,
-            isActive: true,
-            isVerified: false,
-            addresses: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-          await AsyncStorage.setItem("userData", JSON.stringify(updatedUserData));
-        }
+        await user.reload();
       }
 
-      await user?.reload();
-      return router.push("/(tabs)");
+      Alert.alert("Cập nhật thông tin thành công!");
+      router.replace("/(tabs)");
     } catch (error: any) {
-      if (error.message === "That username is taken. Please try another.") {
-        return setError("username", { message: "Tên người dùng đã tồn tại" });
+      console.error("Lỗi cập nhật:", error);
+      if (error.message.includes("Tên người dùng")) {
+        setError("username", { message: "Tên người dùng đã tồn tại" });
+      } else if (error.message.includes("Thiếu thông tin")) {
+        setError("full_name", { message: "Vui lòng điền đầy đủ thông tin" });
+      } else {
+        setError("full_name", { message: error.message || "Đã xảy ra lỗi. Vui lòng thử lại." });
       }
-      return setError("full_name", { message: "Đã xảy ra lỗi" });
     } finally {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!isLoaded || !user) return;
-
-    setValue("full_name", user.fullName || "");
-    setValue("username", user.username || "");
-    setValue("gender", String(user.unsafeMetadata?.gender) || "");
-
-    const userEmail = user.primaryEmailAddress?.emailAddress;
-    if (userEmail) {
-      AsyncStorage.setItem("email", userEmail);
-    }
-  }, [isLoaded, user]);
 
   return (
     <View

@@ -37,7 +37,7 @@ const RadioButtonInput = ({
       <TouchableOpacity
         style={[
           styles.option,
-          isSelected && { backgroundColor: "blue", borderColor: "blue" },
+          isSelected && { backgroundColor: "#4CAF50", borderColor: "#4CAF50" },
         ]}
         onPress={() => onChange(value)}
       >

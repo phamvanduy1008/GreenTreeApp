@@ -158,7 +158,7 @@ const ProductDetail = () => {
         }),
       });
 
-      if (!response.ok) {
+      if (!response.ok) { 
         throw new Error('Thêm vào giỏ hàng thất bại');
       }
 

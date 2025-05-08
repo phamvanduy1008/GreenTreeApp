@@ -1,7 +1,6 @@
 
-# MyApp – React Native với Expo
+# GreenTreeApp – React Native với Expo
 
-![MyApp Logo](https://example.com/logo.png)
 
 MyApp là một ứng dụng di động đa nền tảng (iOS, Android) được phát triển bằng **React Native** và **Expo**. Dự án sử dụng **file-based routing** để xây dựng giao diện người dùng hiện đại, dễ mở rộng.
 
@@ -9,7 +8,15 @@ MyApp là một ứng dụng di động đa nền tảng (iOS, Android) được
 
 ## 🚀 Bắt đầu
 
-### 1. Cài đặt dependencies
+### 1. Clone dự án 
+
+Clone dự án về máy tính của bạn:
+
+```bash
+git clone https://github.com/phamvanduy1008/GreenTreeApp.git
+```
+
+### 2. Cài đặt dependencies
 
 Cài đặt các thư viện cần thiết:
 
@@ -17,7 +24,7 @@ Cài đặt các thư viện cần thiết:
 npm install
 ```
 
-### 2. Khởi động ứng dụng
+### 33. Khởi động ứng dụng
 
 Chạy dự án:
 
@@ -115,4 +122,4 @@ GREENTREEAPP/
 - Chỉnh sửa file trong thư mục `app` để phát triển.
 - Liên hệ tác giả nếu gặp vấn đề.
 
-Cảm ơn bạn đã sử dụng MyApp! 🎉
+Cảm ơn bạn đã sử dụng GreenTreeApp! 🎉
