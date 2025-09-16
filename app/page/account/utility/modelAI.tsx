@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { ipAddress } from '../../../constants/ip';
+import { ipAddressAI } from '../../../constants/ip';
 import { router } from 'expo-router';
+import axios from 'axios';
+
 
 const Identification: React.FC = () => {
   const [image, setImage] = useState<string | null>(null);
@@ -41,48 +43,53 @@ const Identification: React.FC = () => {
   };
 
   // Upload image to server using fetch
-  const uploadImage = async (): Promise<void> => {
-    if (!image) {
-      Alert.alert('Chưa chọn ảnh', 'Vui lòng chọn một ảnh trước.');
-      return;
+const uploadImage = async (): Promise<void> => {
+  if (!image) {
+    Alert.alert('Chưa chọn ảnh', 'Vui lòng chọn một ảnh trước.');
+    return;
+  }
+
+  setLoading(true);
+
+  const formData = new FormData();
+  formData.append('image', {
+    uri: image,
+    name: 'plant_image.jpg',
+    type: 'image/jpeg',
+  } as any);
+
+  try {
+    const response = await axios.post(`${ipAddressAI}/predict`, formData, {
+      headers: {
+        // ❌ Đừng tự set Content-Type
+        // Axios sẽ tự thêm đúng boundary nếu bạn KHÔNG set Content-Type
+      },
+      transformRequest: (data, headers) => {
+        // 👇 Fix cho React Native: xóa content-type
+        delete headers['Content-Type'];
+        return data;
+      },
+    });
+
+    const data: { prediction: string; solutions: string[] } = response.data;
+    console.log("dataAI: ",data);
+    
+    setPrediction(data.prediction);
+    setSolutions(data.solutions);
+  } catch (error: any) {
+    console.error('Lỗi upload:', error);
+    let errorMessage = 'Không thể upload ảnh hoặc nhận dự đoán.';
+    if (error.message.includes('Network Error')) {
+      errorMessage = 'Lỗi kết nối mạng. Vui lòng kiểm tra kết nối và thử lại.';
+    } else if (error.response) {
+      errorMessage = `Phản hồi lỗi: ${error.response.status} - ${JSON.stringify(error.response.data)}`;
     }
+    Alert.alert('Lỗi', errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    setLoading(true);
-
-    const formData = new FormData();
-    formData.append('image', {
-      uri: image,
-      name: 'plant_image.jpg',
-      type: 'image/jpeg',
-    } as any);
-
-    try {
-      const response = await fetch(`${ipAddress}/predict`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Phản hồi mạng không ổn: ${response.status} - ${errorText}`);
-      }
-
-      const data: { prediction: string; solutions: string[] } = await response.json();
-      setPrediction(data.prediction);
-      setSolutions(data.solutions);
-    } catch (error: any) {
-      console.error('Lỗi upload:', error);
-      let errorMessage = 'Không thể upload ảnh hoặc nhận dự đoán.';
-      if (error.message.includes('Network request failed')) {
-        errorMessage = 'Lỗi kết nối mạng. Vui lòng kiểm tra kết nối và thử lại.';
-      } else if (error.message.includes('Phản hồi mạng không ổn')) {
-        errorMessage = error.message;
-      }
-      Alert.alert('Lỗi', errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <ScrollView style={styles.container}>

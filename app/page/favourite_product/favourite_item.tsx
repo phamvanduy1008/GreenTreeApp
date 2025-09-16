@@ -38,6 +38,7 @@ const FavouriteItem = () => {
     const fetchFavourites = async () => {
       try {
         const userData = await AsyncStorage.getItem("userData");
+        
         if (!userData) {
           setError("Bạn cần đăng nhập để xem danh sách yêu thích.");
           setLoading(false);
