@@ -41,8 +41,8 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: "100%",
     marginTop: Platform.OS === "android" ? 180 : 130,
+    marginLeft:  Platform.OS === "android" ? "35%" : "85%",
     marginBottom: 10,
-    marginLeft: "35%",
   },
   successIcon: {
     width: 200,

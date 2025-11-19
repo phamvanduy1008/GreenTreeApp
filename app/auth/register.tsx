@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useWindowDimensions } from "react-native";
 import Input from "@/app/components/common/Input";
 import Button from "@/app/components/common/Button";
 import { ipAddress } from "../constants/ip";
@@ -18,6 +19,8 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const { width } = useWindowDimensions();
+  const isWebLayout = width > 687;
 
   const router = useRouter();
 
@@ -60,48 +63,59 @@ export default function Register() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.registerTitle}>Đăng ký</Text>
-      <Text style={styles.registerText}>
-        Hãy đăng ký tài khoản để trải nghiệm những tính năng thú vị và tuyệt vời
-        của app chúng tôi nhé{" "}
-      </Text>
-
-      <Input
-        type="login"
-        placeholder="Email"
-        inputStyles={{ marginBottom: 20 }}
-        value={email}
-        onChange={setEmail}
-      />
-      <Input
-        type="password"
-        placeholder="Mật khẩu"
-        value={password}
-        onChange={setPassword}
-      />
-      <Input
-        type="password"
-        placeholder="Xác nhận mật khẩu"
-        value={passwordConfirm}
-        onChange={setPasswordConfirm}
-        inputStyles={{ marginTop: 20 }}
-      />
-
-      <Button buttonStyle={styles.btnToRegister} onClick={handleRegister}>
-        <Text style={styles.btnToRegisterText}>Đăng ký</Text>
-      </Button>
-      <Text style={styles.accountText}>
-        Đã có tài khoản?{" "}
-        <Text
-          style={styles.link}
-          onPress={() => {
-            router.push("/auth/login");
-          }}
-        >
-          Đăng nhập
+    <ScrollView
+      style={[
+        styles.container,
+        isWebLayout && styles.webContainer,
+      ]}
+      contentContainerStyle={[
+        isWebLayout && styles.webContentContainer,
+      ]}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={[styles.headingContainer, isWebLayout && styles.webHeadingContainer]}>
+        <Text style={styles.registerTitle}>Đăng ký</Text>
+        <Text style={styles.registerText}>
+          Hãy đăng ký tài khoản để trải nghiệm những tính năng thú vị và tuyệt vời
+          của app chúng tôi nhé{" "}
         </Text>
-      </Text>
+
+        <Input
+          type="login"
+          placeholder="Email"
+          inputStyles={{ marginBottom: 20 }}
+          value={email}
+          onChange={setEmail}
+        />
+        <Input
+          type="password"
+          placeholder="Mật khẩu"
+          value={password}
+          onChange={setPassword}
+        />
+        <Input
+          type="password"
+          placeholder="Xác nhận mật khẩu"
+          value={passwordConfirm}
+          onChange={setPasswordConfirm}
+          inputStyles={{ marginTop: 20 }}
+        />
+
+        <Button buttonStyle={styles.btnToRegister} onClick={handleRegister}>
+          <Text style={styles.btnToRegisterText}>Đăng ký</Text>
+        </Button>
+        <Text style={styles.accountText}>
+          Đã có tài khoản?{" "}
+          <Text
+            style={styles.link}
+            onPress={() => {
+              router.push("/auth/login");
+            }}
+          >
+            Đăng nhập
+          </Text>
+        </Text>
+      </View>
     </ScrollView>
   );
 }
@@ -113,6 +127,35 @@ const styles = StyleSheet.create({
     paddingVertical: 100,
     paddingHorizontal: 20,
     backgroundColor: "#fff",
+  },
+  webContainer: {
+    paddingHorizontal: 40,
+  },
+  webContentContainer: {
+    maxWidth: 500,
+    alignSelf: "center",
+    paddingBottom: 40,
+  },
+  headingContainer: {
+    width: "100%",
+    gap: 5,
+  },
+  webHeadingContainer: {
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+    backgroundColor: "#fdfdffff", 
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   registerTitle: {
     fontSize: 32,

@@ -179,6 +179,8 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
+    outlineColor: "transparent",
+    outlineWidth: 0,
   },
   suggestionList: {
     marginHorizontal: 16,

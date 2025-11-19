@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Image, FlatList, StyleSheet, Dimensions, TouchableOpacity, ImageSourcePropType } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Image, FlatList, StyleSheet, Dimensions, TouchableOpacity, ImageSourcePropType, Platform, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 interface SliderImage {
   url: ImageSourcePropType;
@@ -10,116 +10,120 @@ interface ImageSliderProps {
   images: SliderImage[];
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-const Slider: React.FC<ImageSliderProps> = ({ images }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
-  const [isSmallScreen, setIsSmallScreen] = useState(SCREEN_WIDTH <= 768);
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      const isLastImage = currentIndex === images.length - 1;
-      const newIndex = isLastImage ? 0 : currentIndex + 1;
-      setCurrentIndex(newIndex);
-      flatListRef.current?.scrollToIndex({ index: newIndex, animated: true });
-    }, 2000);
-
-    return () => clearInterval(intervalId);
-  }, [currentIndex, images.length]);
+const Slider: React.FC<ImageSliderProps & { initialIndex?: number }> = ({ images, initialIndex = 0 }) => {
+  const [currentIndex, setCurrentIndex] = useState<number>(initialIndex);
+  const flatListRef = useRef<FlatList<any> | null>(null);
+  const [screenWidth, setScreenWidth] = useState<number>(Dimensions.get('window').width);
+  const isSmallScreen = screenWidth <= 768;
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsSmallScreen(SCREEN_WIDTH <= 768);
-    };
-
-    Dimensions.addEventListener('change', handleResize);
+    const subscription = Dimensions.addEventListener?.('change', ({ window }) => {
+      if (window && window.width) {
+        setScreenWidth(window.width);
+      }
+    });
     return () => {
+      // cleanup for both RN versions
+      if (subscription && typeof subscription.remove === 'function') {
+        subscription.remove();
+      }
     };
   }, []);
 
-  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: any[] }) => {
-    if (viewableItems.length > 0) {
-      setCurrentIndex(viewableItems[0].index);
-    }
-  }).current;
+  // auto-advance slider
+  useEffect(() => {
+    if (!images || images.length <= 1) return;
+    const id = setInterval(() => {
+      setCurrentIndex((prev) => {
+        const next = prev >= images.length - 1 ? 0 : prev + 1;
+        try {
+          flatListRef.current?.scrollToOffset({ offset: next * screenWidth, animated: true });
+        } catch (e) {
+          // ignore scroll errors
+        }
+        return next;
+      });
+    }, 3000);
+    return () => clearInterval(id);
+  }, [images.length, screenWidth]);
+
+  const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = e.nativeEvent.contentOffset.x || 0;
+    const index = Math.round(offsetX / screenWidth) || 0;
+    setCurrentIndex(index);
+  };
 
   const renderItem = ({ item }: { item: SliderImage }) => (
-    <View style={styles.image__container}>
+    <View style={[styles.image__container, { width: screenWidth, height: Platform.OS === "web" ? screenWidth * 0.3 : screenWidth * 0.4,}]}>
       <Image
-        source={ item.url }
-        style={styles.image}
+        source={item.url}
+        style={{ width: '100%', height: '100%', borderRadius: 12 }}
         resizeMode="cover"
       />
     </View>
   );
 
+  const dots = images.map((_, index) => {
+    const active = index === currentIndex;
+    const dotStyle = isSmallScreen
+      ? { width: 20, height: 4, borderRadius: 2 }
+      : { width: 10, height: 10, borderRadius: 5 };
+    return (
+      <TouchableOpacity
+        key={index}
+        onPress={() => {
+          setCurrentIndex(index);
+          try {
+            flatListRef.current?.scrollToOffset({ offset: index * screenWidth, animated: true });
+          } catch (e) {
+            // ignore
+          }
+        }}
+        style={{ marginHorizontal: 4 }}
+      >
+        <View style={[styles.dot, { backgroundColor: active ? '#007AFF' : '#ccc' }, dotStyle]} />
+      </TouchableOpacity>
+    );
+  });
+
   return (
-    <View style={styles.slider}>
+    <View style={[styles.slider, { width: screenWidth, height: Platform.OS === "web" ? screenWidth * 0.3 : screenWidth * 0.4, }]}>
       <FlatList
         ref={flatListRef}
         data={images}
-        renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
         horizontal
         pagingEnabled
+        snapToInterval={screenWidth}
+        decelerationRate={Platform.OS === 'ios' ? 'fast' : 0.8}
         showsHorizontalScrollIndicator={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={{
-          itemVisiblePercentThreshold: 50,
-        }}
-        nestedScrollEnabled={true}
+        renderItem={renderItem}
+        keyExtractor={(_, index) => index.toString()}
+        onMomentumScrollEnd={onMomentumScrollEnd}
+        getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
+        nestedScrollEnabled
+        removeClippedSubviews
       />
-      <View style={styles.dots__container}>
-        {images.map((_, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={() => {
-              setCurrentIndex(index);
-              flatListRef.current?.scrollToIndex({ index, animated: true });
-            }}
-          >
-            {isSmallScreen ? (
-              <View
-                style={[
-                  styles.dot,
-                  { backgroundColor: index === currentIndex ? '#007AFF' : '#ccc' },
-                  { width: 20, height: 4, borderRadius: 2 },
-                ]}
-              />
-            ) : (
-              <View
-                style={[
-                  styles.dot,
-                  { backgroundColor: index === currentIndex ? '#007AFF' : '#ccc' },
-                ]}
-              />
-            )}
-          </TouchableOpacity>
-        ))}
-      </View>
+      <View style={styles.dots__container}>{dots}</View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   slider: {
-    maxWidth: SCREEN_WIDTH,
-    height: SCREEN_WIDTH * 0.4,
     marginVertical: 10,
+    alignSelf: 'center',
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
   },
   image__container: {
-    width: SCREEN_WIDTH,
     height: '100%',
-    alignItems:"center",
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
     paddingHorizontal: 20,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 15,
     elevation: 2,
   },
+  image: {},
   dots__container: {
     position: 'absolute',
     bottom: 10,

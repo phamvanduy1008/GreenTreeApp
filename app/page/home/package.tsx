@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  SafeAreaView,
   View,
   Text,
   StyleSheet,
@@ -56,22 +55,22 @@ const PackageTheTree: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <Text style={styles.loadingText}>Đang tải...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (error || !inforData) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <Text style={styles.errorText}>{error || "Không có dữ liệu"}</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll__content}>
         <View style={styles.header__container}>
@@ -94,13 +93,18 @@ const PackageTheTree: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   scroll__content: {
-    paddingTop: Platform.OS === "android" ? 50 : 0,
+     paddingTop:
+      Platform.OS === "android"
+        ? 50
+        : Platform.OS === "web"
+        ? 30
+        : 50,
   },
   header__container: {
     flexDirection: "row",
@@ -129,9 +133,11 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   image: {
-    width: "100%",
-    height: 300,
-    marginBottom: 10,
+      width: Platform.OS === "android" ?  "100%" :  Platform.OS === "ios"? "100%" :  430,
+      marginLeft: Platform.OS === "web" ? "37%" : 0 ,
+      height:Platform.OS === "web" ? 350: 300,
+      borderRadius: 10,
+      overflow: "hidden",
   },
   subtitle: {
     fontSize: 22,
