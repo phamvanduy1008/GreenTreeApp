@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  SafeAreaView,
   View,
   Text,
   StyleSheet,
@@ -58,22 +57,22 @@ const PlantTheTree: React.FC = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <Text style={styles.loadingText}>Đang tải...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (error || !inforData) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <Text style={styles.errorText}>{error || "Không có dữ liệu"}</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll__content}>
         <View style={styles.header__container}>
@@ -88,6 +87,7 @@ const PlantTheTree: React.FC = () => {
             <Image
               source={ require('../../../assets/images/home/menu1.jpg') }
               style={styles.image}
+              resizeMode="cover"
             />
             <Text style={styles.subtitle}>1. Khí hậu:</Text>
             <Text style={styles.text}>{inforData.climate || "Không có dữ liệu"}</Text>
@@ -100,13 +100,20 @@ const PlantTheTree: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   scroll__content: {
-    paddingTop: Platform.OS === "android" ? 50 : 0,
+    paddingTop:
+      Platform.OS === "android"
+        ? 50
+        : Platform.OS === "web"
+        ? 30
+        : 50,
+
+
   },
   header__container: {
     flexDirection: "row",
@@ -134,11 +141,13 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
-  image: {
-    width: "100%",
-    height: 300,
-    marginBottom: 10,
-  },
+image: {
+      width: Platform.OS === "android" ?  "100%" :  Platform.OS === "ios"? "100%" :  430,
+      marginLeft: Platform.OS === "web" ? "37%" : 0 ,
+      height: 300,
+      borderRadius: 10,
+      overflow: "hidden",
+    },
   subtitle: {
     fontSize: 22,
     fontWeight: "bold",

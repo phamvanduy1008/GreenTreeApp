@@ -9,6 +9,7 @@ import {
   TextInput,
   Image,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { FontFamily } from "../constants/FontFamily";
@@ -51,8 +52,19 @@ const ShopScreen: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState<string>("");
+  const { width } = useWindowDimensions();
+  const isWebLayout = width > 768;
 
   const router = useRouter();
+
+  // Tính toán tự động số cột và width item dựa trên width màn hình
+  const containerPadding = 30;
+  const gutter = 20; 
+  const minItemWidth = 160; 
+  const cols = Math.max(1, Math.floor((width - containerPadding) / (minItemWidth + gutter)));
+  const totalGutterWidth = (cols - 1) * gutter;
+  const totalItemWidth = width - containerPadding - totalGutterWidth;
+  const itemWidth = totalItemWidth / cols;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -117,24 +129,15 @@ const ShopScreen: React.FC = () => {
     router.push("./search");
   };
 
-  const renderProductRow = (data: Product[]) => {
-    const rows: JSX.Element[] = [];
-    for (let i = 0; i < data.length; i += 2) {
-      rows.push(
-        <View key={i} style={styles.gridRow}>
-          <View style={styles.productCardWrapper}>
-            <ProductCard item={data[i]} />
-          </View>
-          {data[i + 1] && (
-            <View style={[styles.productCardWrapper, { marginLeft: 10 }]}>
-              <ProductCard item={data[i + 1]} />
-            </View>
-          )}
+  const renderProductGrid = (data: Product[]) => (
+    <View style={styles.productGridContainer}>
+      {data.map((product) => (
+        <View key={product._id} style={[styles.productItemWrapper, { width: itemWidth }]}>
+          <ProductCard item={product} />
         </View>
-      );
-    }
-    return rows;
-  };
+      ))}
+    </View>
+  );
 
   const sections: Section[] = [
     { type: "header" },
@@ -195,13 +198,18 @@ const ShopScreen: React.FC = () => {
 
       case "banner":
         return (
-          <View style={styles.banner}>
+          <View style={[styles.banner, isWebLayout && styles.webBanner]}>
             <Image
               source={require("../../assets/images/baner.jpg")}
-              style={styles.bannerImage}
+              style={[
+                styles.bannerImage,
+                isWebLayout && styles.webBannerImage,
+              ]}
+              resizeMode={isWebLayout ? "contain" : "cover"}
             />
           </View>
         );
+
 
       case "categories":
         return (
@@ -248,21 +256,7 @@ const ShopScreen: React.FC = () => {
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>{item.title}</Text>
                 </View>
-                <FlatList
-                  style={styles.cateProduct}
-                  data={item.data as Product[]}
-                  keyExtractor={(product) => product._id}
-                  columnWrapperStyle={{
-                    justifyContent: "space-between",
-                    marginBottom: 16,
-                  }}
-                  numColumns={2}
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={[styles.productList]}
-                  renderItem={({ item: product }) => (
-                    <ProductCard item={product} />
-                  )}
-                />
+                {renderProductGrid(item.data as Product[])}
               </>
             )}
           </View>
@@ -314,9 +308,7 @@ const ShopScreen: React.FC = () => {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{item.title}</Text>
             </View>
-            <View style={styles.allProductContainer}>
-              {renderProductRow(item.data as Product[])}
-            </View>
+            {renderProductGrid(item.data as Product[])}
           </View>
         );
 
@@ -420,20 +412,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6F5EA",
   },
   columnWrapper: {
-    justifyContent: "space-between",
-    marginBottom: 20,
+    justifyContent: "space-around", 
+    marginBottom: 16,
+    paddingHorizontal: 8, 
   },
-  allProductContainer: {
-    paddingHorizontal: 15,
+  webColumnWrapper: {
+    paddingHorizontal: 4,
+    justifyContent: "space-between", 
+  },
+  productGridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     paddingBottom: 10,
   },
-  gridRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  productItemWrapper: {
+    // marginRight: 20,
     marginBottom: 20,
-  },
-  productCardWrapper: {
-    width: "48%",
+    marginLeft: 20,
   },
   locationText: {
     fontSize: 17,
@@ -470,14 +465,25 @@ const styles = StyleSheet.create({
     marginTop: 20,
     borderWidth: 0.3,
     borderColor: Colors.primary,
+    height: 95,
+    backgroundColor:"#FFFFF3",
+  },
+  webBanner: {
+    marginHorizontal: 20,
+    marginTop: 25,
+    height: 150, 
+    borderRadius: 12,
   },
   bannerImage: {
     width: "100%",
-    height: 95,
+    height: "100%",
     borderRadius: 10,
     resizeMode: "cover",
     borderWidth: 0.2,
     borderColor: "#eee",
+  },
+  webBannerImage: {
+    borderRadius: 12,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -502,6 +508,10 @@ const styles = StyleSheet.create({
   },
   cateProduct: {
     marginLeft: 15,
+  },
+  allProductContainer: {
+    paddingHorizontal: 15,
+    paddingBottom: 10,
   },
 });
 

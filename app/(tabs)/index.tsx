@@ -1,6 +1,5 @@
-import React, { JSX, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  SafeAreaView,
   ScrollView,
   View,
   Text,
@@ -9,6 +8,7 @@ import {
   ImageBackground,
   Image,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { router } from "expo-router";
 import { Colors } from "../constants/Colors";
@@ -36,18 +36,9 @@ interface InforData {
 }
 
 const images = [
-  {
-    url: require("../../assets/images/home/slider1.jpg"),
-    title: "Slider 1",
-  },
-  {
-    url: require("../../assets/images/home/slider2.jpg"),
-    title: "Slider 2",
-  },
-  {
-    url: require("../../assets/images/home/slider3.jpg"),
-    title: "Slider 3",
-  },
+  { url: require("../../assets/images/home/slider1.jpg"), title: "Slider 1" },
+  { url: require("../../assets/images/home/slider2.jpg"), title: "Slider 2" },
+  { url: require("../../assets/images/home/slider3.jpg"), title: "Slider 3" },
 ];
 
 const Home: React.FC = () => {
@@ -55,6 +46,16 @@ const Home: React.FC = () => {
   const [inforData, setInforData] = useState<InforData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { width } = useWindowDimensions();
+
+  const getCardWidth = () => {
+    if (width < 1024) {
+      return "48%";
+    } else {
+      return "30%";
+    }
+  };
 
   useEffect(() => {
     const fetchInforPlants = async () => {
@@ -99,133 +100,94 @@ const Home: React.FC = () => {
   };
 
   const handleEditPlant = (plantId: string) => {
-    try {
-      router.push({
-        pathname: "/page/home/plant",
-        params: { plantId },
-      });
-    } catch (error) {
-      console.error("❌ Lỗi khi điều hướng đến màn hình Plant:", error);
-    }
+    router.push({ pathname: "/page/home/plant", params: { plantId } });
   };
-
   const handleEditWater = (plantId: string) => {
-    try {
-      router.push({
-        pathname: "/page/home/water",
-        params: { plantId },
-      });
-    } catch (error) {
-      console.error("❌ Lỗi khi điều hướng đến màn hình Water:", error);
-    }
+    router.push({ pathname: "/page/home/water", params: { plantId } });
   };
-
   const handleEditPreservation = (plantId: string) => {
-    try {
-      router.push({
-        pathname: "/page/home/preservate",
-        params: { plantId },
-      });
-    } catch (error) {
-      console.error("❌ Lỗi khi điều hướng đến màn hình Preservation:", error);
-    }
+    router.push({ pathname: "/page/home/preservate", params: { plantId } });
   };
-
   const handleEditPackaging = (plantId: string) => {
-    try {
-      router.push({
-        pathname: "/page/home/package",
-        params: { plantId },
-      });
-    } catch (error) {
-      console.error("❌ Lỗi khi điều hướng đến màn hình Packaging:", error);
-    }
+    router.push({ pathname: "/page/home/package", params: { plantId } });
   };
 
   const renderCardViews = () => {
-    if (loading) {
-      return <Text style={styles.loadingText}>Đang tải...</Text>;
-    }
+    if (loading) return <Text style={styles.loadingText}>Đang tải...</Text>;
+    if (error) return <Text style={styles.errorText}>{error}</Text>;
 
-    if (error) {
-      return <Text style={styles.errorText}>{error}</Text>;
-    }
-
-    const rows: JSX.Element[] = [];
-    for (let i = 0; i < inforData.length; i += 2) {
-      const rowData: JSX.Element[] = [];
-      for (let j = i; j < Math.min(i + 2, inforData.length); j++) {
-        const data = inforData[j];
-        const isExpanded = data._id === expandedRow;
-
-        rowData.push(
-          <TouchableOpacity
-            key={data._id}
-            style={[styles.card, isExpanded && styles.card__expanded]}
-            onPress={() => toggleRowExpansion(data._id)}
-            disabled={isExpanded}
-          >
-            <View style={styles.card__wrapper}>
-              <ImageBackground
-                source={getImageForPlant(data.plant?.name || "")}
-                style={styles.card__image}
-              >
-                {isExpanded && (
-                  <>
-                    <View style={styles.card__row}>
-                      <TouchableOpacity
-                        style={styles.card__menu_item}
-                        onPress={() => handleEditPlant(data.plant._id)}
-                      >
-                        <Image
-                          source={require("../../assets/icons/home/plant.png")}
-                          style={styles.card__icon}
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.card__menu_item}
-                        onPress={() => handleEditWater(data.plant._id)}
-                      >
-                        <Image
-                          source={require("../../assets/icons/home/water.png")}
-                          style={styles.card__icon}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                    <View style={styles.card__row}>
-                      <TouchableOpacity
-                        style={styles.card__menu_item}
-                        onPress={() => handleEditPreservation(data.plant._id)}
-                      >
-                        <Image
-                          source={require("../../assets/icons/home/shield.png")}
-                          style={styles.card__icon}
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.card__menu_item}
-                        onPress={() => handleEditPackaging(data.plant._id)}
-                      >
-                        <Image
-                          source={require("../../assets/icons/home/package.png")}
-                          style={styles.card__icon}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  </>
-                )}
-              </ImageBackground>
-            </View>
-          </TouchableOpacity>
-        );
-      }
-      rows.push(
-        <View key={i} style={styles.card__row_container}>
-          {rowData}
-        </View>
-      );
-    }
-    return rows;
+    return (
+      <View style={styles.cardContainer}>
+        {inforData.map((item) => {
+          const isExpanded = item._id === expandedRow;
+          return (
+            <TouchableOpacity
+              key={item._id}
+              style={[
+                styles.card,
+                { flexBasis: getCardWidth(), maxWidth: getCardWidth() }, // 👈 responsive width
+                isExpanded && styles.card__expanded,
+              ]}
+              onPress={() => toggleRowExpansion(item._id)}
+              disabled={isExpanded}
+            >
+              <View style={styles.card__wrapper}>
+                <ImageBackground
+                  source={getImageForPlant(item.plant?.name || "")}
+                  style={styles.card__image}
+                  imageStyle={styles.card__imageStyle}
+                >
+                  {isExpanded && (
+                    <>
+                      <View style={styles.card__row}>
+                        <TouchableOpacity
+                          style={styles.card__menu_item}
+                          onPress={() => handleEditPlant(item.plant._id)}
+                        >
+                          <Image
+                            source={require("../../assets/icons/home/plant.png")}
+                            style={styles.card__icon}
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.card__menu_item}
+                          onPress={() => handleEditWater(item.plant._id)}
+                        >
+                          <Image
+                            source={require("../../assets/icons/home/water.png")}
+                            style={styles.card__icon}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      <View style={styles.card__row}>
+                        <TouchableOpacity
+                          style={styles.card__menu_item}
+                          onPress={() => handleEditPreservation(item.plant._id)}
+                        >
+                          <Image
+                            source={require("../../assets/icons/home/shield.png")}
+                            style={styles.card__icon}
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.card__menu_item}
+                          onPress={() => handleEditPackaging(item.plant._id)}
+                        >
+                          <Image
+                            source={require("../../assets/icons/home/package.png")}
+                            style={styles.card__icon}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  )}
+                </ImageBackground>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
   };
 
   return (
@@ -238,7 +200,7 @@ const Home: React.FC = () => {
           <View style={styles.header}>
             <Text style={styles.header__title}>Chăm sóc cây trồng</Text>
           </View>
-          <Slider images={images} />
+          <Slider images={images} initialIndex={0} />
           <View style={styles.content}>
             <View style={styles.section}>{renderCardViews()}</View>
           </View>
@@ -249,21 +211,11 @@ const Home: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-  },
-  header_container:{
-    flex: 1,
-  },
-  scroll__content: {
-    flexGrow: 1,
-    paddingBottom: 150,
-    marginTop: 5,
-  },
+  container: { flex: 1, backgroundColor: "#FFFFFF", alignItems: "center" },
+  header_container: { flex: 1 },
+  scroll__content: { flexGrow: 1, paddingBottom: 120, marginTop: 5 },
   header: {
-    width: "90%",
+    width: Platform.OS === "web" ? "100%" : "90%",
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
@@ -277,39 +229,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    marginTop: Platform.OS === 'ios'? 50 : 40,
+    marginTop: Platform.OS === "ios" ? 50 : 40,
   },
-  header__title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: Colors.primary,
-    alignItems: "center",
-  },
-  card__wrapper: {
-    flex: 1,
-    borderRadius: 15,
-    overflow: "hidden",
-  },
+  header__title: { fontSize: 24, fontWeight: "700", color: Colors.primary },
   content: {
     width: "100%",
-    paddingHorizontal: 20,
+    paddingHorizontal: Platform.OS === "web" ? 80 : 20,
     paddingTop: 10,
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  section: {
-    width: "100%",
-    flex: 1,
-  },
-  card__row_container: {
+  section: { width: "100%", flex: 1 },
+  cardContainer: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: 15,
   },
-
   card: {
-    width: "48%",
-    height: 170,
+    height: Platform.OS === "web" ? 200 : 170,
     borderRadius: 15,
     backgroundColor: "#FFFFFF",
     elevation: 3,
@@ -317,14 +254,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
+    marginBottom: 15,
   },
-
-  card__expanded: {
-    height: 170,
-  },
-  card__image: {
-    flex: 1,
-  },
+  card__expanded: { height: Platform.OS === "web" ? 200 : 170, },
+  card__wrapper: { flex: 1, borderRadius: 15, overflow: "hidden" },
+  card__image: { flex: 1, width: "100%", height: "100%" },
+  card__imageStyle: { resizeMode: "cover", borderRadius: 15 },
   card__row: {
     width: "100%",
     height: "50%",

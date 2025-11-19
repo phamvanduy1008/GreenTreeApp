@@ -17,13 +17,16 @@ import Button from "@/app/components/common/Button";
 import { useRouter } from "expo-router";
 import { ipAddress } from "../constants/ip";
 import { Colors } from "../constants/Colors";
+import { Platform, useWindowDimensions } from "react-native";
 
 export const useWarmUpBrowser = () => {
   useEffect(() => {
-    void WebBrowser.warmUpAsync();
-    return () => {
-      void WebBrowser.coolDownAsync();
-    };
+    if (Platform.OS !== "web") {
+      void WebBrowser.warmUpAsync();
+      return () => {
+        void WebBrowser.coolDownAsync();
+      };
+    }
   }, []);
 };
 
@@ -33,6 +36,8 @@ const Login = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { width } = useWindowDimensions();
+  const isWebLayout = width > 687; // Áp dụng layout web chỉ khi width > 687px
 
   const handleLogin = async () => {
     try {
@@ -41,12 +46,12 @@ const Login = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok && data.success && data.user) {
         const user = data.user;
-  
+
         if (user.onboarding_completed === 0) {
           Alert.alert("Đăng nhập thành công! Vui lòng hoàn tất hồ sơ.");
           router.push({
@@ -59,7 +64,7 @@ const Login = () => {
             ["email", email],
             ["userData", JSON.stringify(user)],
           ]);
-  
+
           Alert.alert("Đăng nhập thành công!");
           router.replace("/(tabs)");
         }
@@ -71,7 +76,6 @@ const Login = () => {
       Alert.alert("Có lỗi xảy ra, vui lòng thử lại sau.");
     }
   };
-  
 
   useWarmUpBrowser();
   const insets = useSafeAreaInsets();
@@ -80,14 +84,21 @@ const Login = () => {
     <ScrollView
       style={[
         styles.container,
+        isWebLayout && styles.webContainer,
         { paddingTop: insets.top + 40, paddingBottom: insets.bottom },
       ]}
+      contentContainerStyle={[
+        styles.contentContainer,
+        isWebLayout && styles.webContentContainer, 
+      ]}
+      showsVerticalScrollIndicator={false} 
     >
-      <View style={styles.headingContainer}>
+      <View style={[styles.headingContainer, isWebLayout && styles.webHeadingContainer]}>
         <Text style={styles.title}>Đăng Nhập</Text>
         <Text style={styles.text}>
           Bắt đầu hành trình của bạn cùng sản phẩm của chúng tôi.
         </Text>
+
         <Input
           type="login"
           placeholder="Email"
@@ -95,18 +106,22 @@ const Login = () => {
           onChange={setEmail}
           inputStyles={{ marginBottom: 20 }}
         />
+
         <Input
           type="password"
           placeholder="Mật khẩu"
           value={password}
           onChange={setPassword}
         />
+
         <TouchableOpacity onPress={() => {}}>
           <Text style={styles.forgetpass}>Quên mật khẩu?</Text>
         </TouchableOpacity>
+
         <Button onClick={handleLogin} buttonStyle={styles.btntologin}>
           <Text style={styles.btnTextLogin}>Đăng Nhập</Text>
         </Button>
+
         <Text style={styles.textaccount}>
           Chưa có tài khoản?{" "}
           <Text
@@ -118,13 +133,14 @@ const Login = () => {
             Đăng Ký
           </Text>
         </Text>
-      </View>
-
-      <View style={styles.socialButtonsContainer}>
+         <View style={[styles.socialButtonsContainer, isWebLayout && styles.webSocialButtonsContainer]}>
         <SocialLoginButton strategy="facebook" />
         <SocialLoginButton strategy="google" />
         <SocialLoginButton strategy="apple" />
       </View>
+      </View>
+
+     
     </ScrollView>
   );
 };
@@ -137,6 +153,18 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     padding: 20,
     gap: 20,
+  },
+
+  webContainer: {
+    paddingHorizontal: 40,
+  },
+  contentContainer: {
+    gap: 20,
+  },
+  webContentContainer: {
+    maxWidth: 500, 
+    alignSelf: "center", 
+    paddingBottom: 40,
   },
   title: {
     fontSize: 32,
@@ -155,6 +183,23 @@ const styles = StyleSheet.create({
     width: "100%",
     gap: 5,
   },
+  webHeadingContainer: {
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+    backgroundColor: "#fdfdffff", 
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3, 
+  },
   label: {
     fontSize: 20,
     fontWeight: "bold",
@@ -167,6 +212,12 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 60,
     gap: 10,
+  },
+  webSocialButtonsContainer: {
+    marginTop: 40, 
+    flexDirection: "column",
+    justifyContent: "center",
+    gap: 16,
   },
   buttonlogin: {
     flexDirection: "row",
