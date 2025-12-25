@@ -19,6 +19,7 @@ import { Colors } from "../../constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ipAddress } from "../../constants/ip";
+import { getShippingFee, getShippingZone, getProvinceCodeFromName } from "../../constants/shippingZones";
 
 interface Product {
   _id: string;
@@ -64,6 +65,7 @@ const Payment = () => {
   const [editedPhone, setEditedPhone] = useState<string>("");
   const [editedStreet, setEditedStreet] = useState<string>("");
   const [selectedCity, setSelectedCity] = useState<string>("Đà Nẵng");
+  const [selectedCityCode, setSelectedCityCode] = useState<number>(48); // Default to Đà Nẵng
   const [selectedDistrict, setSelectedDistrict] = useState<string>("");
   const [selectedWard, setSelectedWard] = useState<string>("");
   const [momoId, setMomoId] = useState<string>("");
@@ -101,9 +103,15 @@ const Payment = () => {
           setEditedFullName(parsedAddress.fullName || "");
           setEditedPhone(parsedAddress.phone || "");
           setEditedStreet(parsedAddress.street || "");
-          setSelectedCity(parsedAddress.city || "Đà Nẵng");
+          const city = parsedAddress.city || "Đà Nẵng";
+          const cityCode = parsedAddress.cityCode || getProvinceCodeFromName(city);  // Ưu tiên cityCode từ storage
+          setSelectedCity(city);
+          setSelectedCityCode(cityCode);
           setSelectedDistrict(parsedAddress.district || "");
           setSelectedWard(parsedAddress.ward || "");
+        } else {
+          // Initialize with default city code if no saved address
+          setSelectedCityCode(getProvinceCodeFromName("Đà Nẵng"));
         }
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu từ AsyncStorage:", error);
@@ -151,13 +159,11 @@ const Payment = () => {
         const quantity = items.reduce((sum, item) => sum + item.quantity, 0);
         setTotalQuantity(quantity);
 
-        // Calculate shipping fee
-        let fee = 0;
-        if (quantity < 20) fee = 20000;
-        else if (quantity < 30) fee = 30000;
-        else if (quantity < 40) fee = 40000;
-        else if (quantity < 50) fee = 50000;
-        else fee = 60000;
+        // Calculate shipping fee based on zone
+        let fee = 20000; // Default fee for Hà Nội
+        if (selectedCityCode && selectedCityCode > 0) {
+          fee = getShippingFee(selectedCityCode);
+        }
         setShippingFee(fee);
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu giỏ hàng:", error);
@@ -166,7 +172,15 @@ const Payment = () => {
     };
 
     loadCartItems();
-  }, [selectedItems, totalPrice]);
+  }, [selectedItems, totalPrice, selectedCityCode]);
+
+  // Recalculate shipping fee when city code changes
+  useEffect(() => {
+    if (selectedCityCode && selectedCityCode > 0) {
+      const fee = getShippingFee(selectedCityCode);
+      setShippingFee(fee);
+    }
+  }, [selectedCityCode]);
 
   const handleSelectAddress = () => {
     router.push({
@@ -188,6 +202,7 @@ const Payment = () => {
   const handleSelect = (item: string) => {
     if (modalVisible === "city") {
       setSelectedCity(item);
+      setSelectedCityCode(getProvinceCodeFromName(item));
       setSelectedDistrict("");
       setSelectedWard("");
     } else if (modalVisible === "district") {
@@ -553,9 +568,16 @@ const Payment = () => {
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Chi phí vận chuyển</Text>
-              <Text style={styles.detailValue}>
-                {formatPrice(shippingFee)} ₫
-              </Text>
+              <View>
+                <Text style={styles.detailValue}>
+                  {formatPrice(shippingFee)} ₫
+                </Text>
+                {selectedCityCode > 0 && (
+                  <Text style={styles.zoneText}>
+                    ({getShippingZone(selectedCityCode)})
+                  </Text>
+                )}
+              </View>
             </View>
             <View style={styles.paymentRowTotal}>
               <Text style={styles.paymentLabelTotal}>Tổng thanh toán:</Text>
@@ -691,6 +713,12 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     paddingBottom: 15,
     lineHeight: 22,
+  },
+  zoneText:{
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 4,
+    marginLeft: 3,
   },
   addressLabel: {
     fontWeight: "600",

@@ -112,8 +112,6 @@ const styles = StyleSheet.create({
         : Platform.OS === "web"
         ? 30
         : 50,
-
-
   },
   header__container: {
     flexDirection: "row",
@@ -141,7 +139,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
-image: {
+  image: {
       width: Platform.OS === "android" ?  "100%" :  Platform.OS === "ios"? "100%" :  430,
       marginLeft: Platform.OS === "web" ? "37%" : 0 ,
       height: 300,

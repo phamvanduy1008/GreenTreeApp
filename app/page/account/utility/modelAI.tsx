@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { ipAddressAI } from '../../../constants/ip';
+import { ipAddress } from '../../../constants/ip';
 import { router } from 'expo-router';
 import axios from 'axios';
 
@@ -59,7 +59,7 @@ const uploadImage = async (): Promise<void> => {
   } as any);
 
   try {
-    const response = await axios.post(`${ipAddressAI}/predict`, formData, {
+    const response = await axios.post(`${ipAddress}/predict`, formData, {
       headers: {
         // ❌ Đừng tự set Content-Type
         // Axios sẽ tự thêm đúng boundary nếu bạn KHÔNG set Content-Type

@@ -12,6 +12,7 @@ import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ipAddress } from "@/app/constants/ip";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getProvinceCodeFromName } from "@/app/constants/shippingZones";
 
 interface Address {
   _id: string;
@@ -21,6 +22,7 @@ interface Address {
   ward?: string;
   district?: string;
   city?: string;
+  cityCode?: number;  // Thêm cityCode từ DB
 }
 
 const AddressDelivery = () => {
@@ -94,6 +96,7 @@ const AddressDelivery = () => {
         ward: address.ward || "",
         district: address.district || "",
         city: address.city || "",
+        cityCode: address.cityCode || "",  // Thêm cityCode
         fromPayment: params.fromPayment,
       },
     });
@@ -106,6 +109,7 @@ const AddressDelivery = () => {
         phone: address.phone,
         street: address.address,
         city: address.city,
+        cityCode: address.cityCode || getProvinceCodeFromName(address.city) || 48,  // Ưu tiên cityCode từ DB
         district:address.district ,
         ward: address.ward,
       };
