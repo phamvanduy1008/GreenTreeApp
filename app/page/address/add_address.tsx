@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ipAddress } from "@/app/constants/ip";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { places } from "../../constants/places";
+type RegionItem = { name: string; code: number };
 
 const AddAddress = () => {
   const router = useRouter();
@@ -29,7 +29,13 @@ const AddAddress = () => {
   const [city, setCity] = useState("");
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState<"city" | "district" | "ward" | null>(null);
-  const [modalItems, setModalItems] = useState<string[]>([]);
+  const [modalItems, setModalItems] = useState<RegionItem[]>([]);
+
+  const [provinces, setProvinces] = useState<RegionItem[]>([]);
+  const [districtsMap, setDistrictsMap] = useState<Record<number, RegionItem[]>>({});
+  const [wardsMap, setWardsMap] = useState<Record<number, RegionItem[]>>({});
+  const [selectedProvinceCode, setSelectedProvinceCode] = useState<number | null>(null);
+  const [selectedDistrictCode, setSelectedDistrictCode] = useState<number | null>(null);
 
   const handleGoBack = () => {
     router.back();
@@ -41,6 +47,11 @@ const AddAddress = () => {
         "Lỗi",
         "Vui lòng nhập đầy đủ các trường bắt buộc (Họ tên, Số điện thoại, Địa chỉ chi tiết)"
       );
+      return;
+    }
+
+    if (!selectedProvinceCode) {
+      Alert.alert("Lỗi", "Vui lòng chọn tỉnh/thành phố.");
       return;
     }
 
@@ -59,7 +70,15 @@ const AddAddress = () => {
       const response = await fetch(`${ipAddress}/api/add_addresses/${userId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, address, ward, district, city }),
+        body: JSON.stringify({ 
+          name, 
+          phone, 
+          address, 
+          ward, 
+          district, 
+          city, 
+          cityCode: selectedProvinceCode  // Thêm cityCode
+        }),
       });
 
       if (!response.ok) {
@@ -86,39 +105,132 @@ const AddAddress = () => {
     }
   };
 
-  const openModal = (type: "city" | "district" | "ward") => {
-    let items: string[] = [];
-    if (type === "city") {
-      items = ["Đà Nẵng"];
-    } else if (type === "district" && city && places[city]) {
-      items = Object.keys(places[city]);
-    } else if (type === "ward" && city && district && places[city]?.[district]) {
-      items = places[city][district];
-    }
-    setModalItems(items);
-    setModalVisible(type);
-  };
+    useEffect(() => {
+      fetchProvinces();
+    }, []);
 
-  const handleSelect = (item: string) => {
+    const fetchProvinces = async () => {
+      try {
+        const tryUrls = [
+          "https://provinces.open-api.vn/api/?depth=1",
+          "https://provinces.open-api.vn/api/p",
+        ];
+        let data: any = null;
+        for (const url of tryUrls) {
+          try {
+            const res = await fetch(url);
+            if (res.ok) {
+              data = await res.json();
+              break;
+            } else {
+              const text = await res.text().catch(() => null);
+              console.warn(`fetchProvinces: ${res.status} from ${url} -> ${text}`);
+            }
+          } catch (e) {
+            console.warn(`fetchProvinces network error for ${url}:`, e);
+          }
+        }
+
+        if (!data) throw new Error("Không thể lấy danh sách tỉnh thành");
+
+        const list = Array.isArray(data) ? data : data?.p || data?.provinces || [];
+        const mapped: RegionItem[] = list.map((p: any) => ({ name: p.name, code: p.code }));
+        setProvinces(mapped);
+      } catch (err) {
+        console.error("Error fetching provinces:", err);
+        setProvinces([{ name: "Thành phố Đà Nẵng", code: 48 }]);
+        Alert.alert(
+          "Lỗi tải dữ liệu",
+          "Không thể tải danh sách tỉnh/thành phố. Đã sử dụng mặc định Đà Nẵng."
+        );
+      }
+    };
+
+    const fetchDistricts = async (provinceCode: number) => {
+      try {
+        const res = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
+        if (!res.ok) throw new Error("Không thể lấy quận/huyện");
+        const data = await res.json();
+        const mapped: RegionItem[] = (data.districts || []).map((d: any) => ({ name: d.name, code: d.code }));
+        setDistrictsMap((prev) => ({ ...prev, [provinceCode]: mapped }));
+        return mapped;
+      } catch (err) {
+        console.error("Error fetching districts:", err);
+        return [] as RegionItem[];
+      }
+    };
+
+    const fetchWards = async (districtCode: number) => {
+      try {
+        const res = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+        if (!res.ok) throw new Error("Không thể lấy phường/xã");
+        const data = await res.json();
+        const mapped: RegionItem[] = (data.wards || []).map((w: any) => ({ name: w.name, code: w.code }));
+        setWardsMap((prev) => ({ ...prev, [districtCode]: mapped }));
+        return mapped;
+      } catch (err) {
+        console.error("Error fetching wards:", err);
+        return [] as RegionItem[];
+      }
+    };
+
+    const openModal = async (type: "city" | "district" | "ward") => {
+      if (type === "city") {
+        setModalItems(provinces);
+        setModalVisible(type);
+        return;
+      }
+
+      if (type === "district") {
+        if (!selectedProvinceCode) return;
+        const cached = districtsMap[selectedProvinceCode];
+        if (cached) {
+          setModalItems(cached);
+        } else {
+          const ds = await fetchDistricts(selectedProvinceCode);
+          setModalItems(ds);
+        }
+        setModalVisible(type);
+        return;
+      }
+
+      if (type === "ward") {
+        if (!selectedDistrictCode) return;
+        const cached = wardsMap[selectedDistrictCode];
+        if (cached) {
+          setModalItems(cached);
+        } else {
+          const ws = await fetchWards(selectedDistrictCode);
+          setModalItems(ws);
+        }
+        setModalVisible(type);
+        return;
+      }
+    };
+
+  const handleSelect = (item: RegionItem) => {
     if (modalVisible === "city") {
-      setCity(item);
+      setCity(item.name);
       setDistrict("");
       setWard("");
+      setSelectedProvinceCode(item.code);
+      setSelectedDistrictCode(null);
     } else if (modalVisible === "district") {
-      setDistrict(item);
+      setDistrict(item.name);
       setWard("");
+      setSelectedDistrictCode(item.code);
     } else if (modalVisible === "ward") {
-      setWard(item);
+      setWard(item.name);
     }
     setModalVisible(null);
   };
 
-  const renderModalItem = ({ item }: { item: string }) => (
+  const renderModalItem = ({ item }: { item: RegionItem }) => (
     <TouchableOpacity
       style={styles.modalItem}
       onPress={() => handleSelect(item)}
     >
-      <Text style={styles.itemText}>{item}</Text>
+      <Text style={styles.itemText}>{item.name}</Text>
     </TouchableOpacity>
   );
 
@@ -192,9 +304,9 @@ const AddAddress = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Quận/Huyện *</Text>
               <TouchableOpacity
-                style={[styles.selectField, !city && styles.disabled]}
+                style={[styles.selectField, !selectedProvinceCode && styles.disabled]}
                 onPress={() => openModal("district")}
-                disabled={!city}
+                disabled={!selectedProvinceCode}
               >
                 <Text style={styles.selectText}>
                   {district || "Chọn quận/huyện"}
@@ -205,9 +317,9 @@ const AddAddress = () => {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Phường/Xã *</Text>
               <TouchableOpacity
-                style={[styles.selectField, !district && styles.disabled]}
+                style={[styles.selectField, !selectedDistrictCode && styles.disabled]}
                 onPress={() => openModal("ward")}
-                disabled={!district}
+                disabled={!selectedDistrictCode}
               >
                 <Text style={styles.selectText}>
                   {ward || "Chọn phường/xã"}
@@ -246,7 +358,7 @@ const AddAddress = () => {
               <FlatList
                 data={modalItems}
                 renderItem={renderModalItem}
-                keyExtractor={(item) => item}
+                keyExtractor={(item) => item.code.toString()}
                 style={styles.modalList}
               />
               <TouchableOpacity
